@@ -17,9 +17,7 @@ int main(int argc,char *argv[])
 {
 	int res,i,fi;
 	char *p=NULL,*addr;
-
-
-        struct stat st;
+    struct stat st;
 
 	if (argc < 3 ) { printf("Usage: httpparser <file> <search>\nAttention <search> is case sensitive\n"); exit(1); }
 	/* ouverture du fichier contenant la requête */ 
