@@ -65,7 +65,6 @@ int check_for_syntax(const char *request, derivation_tree *previous_node, const 
 	int next_token_length = -1;
 	int is_valid = 0;
 
-	char *before_pos = NULL;
 	char *next_pos = NULL;
 
 	if ( get_end_or_group( rule_descr, rule_end) != NULL )
@@ -78,7 +77,7 @@ int check_for_syntax(const char *request, derivation_tree *previous_node, const 
 	}
 	while (reach_str_end(rule_descr, rule_end) == 0)
 	{
-		if ( S_DEBUG ) printf("RULE : %.*s\n", (rule_end-rule_descr),rule_descr);
+		if ( S_DEBUG ) printf("RULE : %.*s\n", (int)(rule_end-rule_descr),rule_descr);
 
 		next_pos = NULL;
 		next_token_length = -1;
@@ -120,21 +119,23 @@ int check_for_syntax(const char *request, derivation_tree *previous_node, const 
 			int length = get_end_rule( rule_descr, rule_end) - rule_descr + 1;  //We Get the length of the name of the embedeed Rule.
 			abnf_rule *new_rule = get_abnf_rule( rule_descr, length); //We get the new abnf rule.
 
-			// TODO : Créer current_node  (level + 1) (Child NULL) (TAG new_rule->name) (Value -> request)
+			current_node = create_tree_node(new_rule->name, request, 0, previous_node->tree_level + 1);
 
 			next_token_length = check_for_syntax( request, current_node, new_rule->description, NULL);
 
 			if (next_token_length != S_NOT_VALID){
-			next_pos = get_next_rule(rule_descr, rule_end);
-			} // TODO :  Add current to previous
-			else ;// TODO : Delete Tree depuis current
+			 	next_pos = get_next_rule(rule_descr, rule_end);
+				current_node->value_length = next_token_length;
+				add_child_to_node(previous_node, current_node);
+			} 
+			else {
+				purge_tree_node(current_node);
+				current_node = NULL;
+			}
 
 			if ( S_DEBUG_PATH ) printf("Path <- Embedeed : %d\n", next_token_length);
 		}
 		
-
-		
-
 		is_valid = next_token_length != S_NOT_VALID;
 		
 		if (is_valid)
@@ -145,18 +146,14 @@ int check_for_syntax(const char *request, derivation_tree *previous_node, const 
 		rule_descr = next_pos;  // Is NULL if we got an error so we stop
 	}
 	
-	
-
 	if ( is_valid == 0 )
 	{
-		/* TODO : ADD RETURN FAILED */
 		if ( S_DEBUG_TOKEN ) printf("Token (%d)\n",S_NOT_VALID);
 		return S_NOT_VALID;
 	}
 	else
-	{
-		/* TODO : Add value to previous */
-
+	{	
+		
 		if ( S_DEBUG_TOKEN ) printf("Token (%d)\n",token_length);
 		return token_length;
 	}
@@ -184,12 +181,12 @@ int reach_str_end(const char *str, const char *str_end){
 
 char *cs_strchr(const char *str, char c, const char *str_end){
     str = strchr(str,c);
-	return reach_str_end(str, str_end) ? NULL : str;
+	return reach_str_end(str, str_end) ? NULL : (char *)str;
 }
 
 char *cs_strpbrk(const char *str_1, const char *str_2, const char *str_end){
     str_1 = strpbrk(str_1,str_2);
-	return reach_str_end(str_1, str_end) ? NULL : str_1;
+	return reach_str_end(str_1, str_end) ? NULL : (char *)str_1;
 }
 
 char *get_end_rule(const char *str, const char *str_end){
@@ -212,7 +209,7 @@ char *get_end_rule(const char *str, const char *str_end){
 		if ( str != NULL) --str;
 		break;
 	}
-	return str;
+	return (char *)str;
 }
 
 char *get_next_rule(const char *str, const char *str_end){
@@ -234,7 +231,7 @@ char *get_start_rule(const char *str, const char *str_end){
 	else if ( *str == S_STRING) str++;
 	else if ( *str == '%') str += 2;
 
-	return reach_str_end(str, str_end) ? NULL : str;
+	return reach_str_end(str, str_end) ? NULL : (char *)str;
 }
 
 char *get_end_group(const char *str, const char *str_end, char open, char close){
@@ -244,7 +241,7 @@ char *get_end_group(const char *str, const char *str_end, char open, char close)
 		if ( *str == open) in_block_cnt++; 
 		else if( *str == close && in_block_cnt > 0) in_block_cnt--;
 
-		if (*str == close && in_block_cnt == 0) return str; // Success
+		if (*str == close && in_block_cnt == 0) return (char *)str; // Success
 
 		str++;
 	}
@@ -258,7 +255,7 @@ char *get_end_or_group(const char *str, const char *str_end){
 		str = get_next_rule(str, str_end);
 	}
 	if (reach_str_end(str,str_end)) return NULL;
-	return str;
+	return (char *)str;
 }
 
 int handle_terminal_number_rule(char c, const char *rule, const char *rule_end, char **next_srt){
@@ -347,7 +344,6 @@ int handle_repetition_rule(const char *request, derivation_tree *previous_node, 
 	int min = 0, max = MAX_INT;
 	char *t_str = (char *)rule;
 	char **temp_pos = &t_str;
-	char *s_str = NULL;
 	char *e_str = NULL;
 
 	if (*t_str != '*') min = strtol(t_str, temp_pos, 10); //We get the minimal amount.
@@ -361,7 +357,6 @@ int handle_repetition_rule(const char *request, derivation_tree *previous_node, 
 		
 	t_str = *temp_pos; 
 
-	s_str = get_start_rule(t_str, rule_end);
     e_str = get_end_rule(t_str, rule_end) + 1;
 
 	//printf("Reglesssss : %.*s\n", (e_str - s_str + 1), s_str);
@@ -443,7 +438,5 @@ static abnf_rule rules[] = {
 	{"mot","1*ALPHA separateur "},
 	{"message","debut 2*(mot ponct / nombre separateur) [ponct] fin LF "},
 	// HTTP ABNF
-	{"TEST_TEXT","\"Bonjour je suis\" SP \"ça va ?\" "},
-	{"TEST","SP TEST_TEXT SP (HTAB (DQUOTE)) / 2*SP [SP] "},
 	{NULL,NULL}
 }; /**< All abnf rules*/
