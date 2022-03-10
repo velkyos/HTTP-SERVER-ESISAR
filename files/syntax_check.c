@@ -12,9 +12,9 @@
 
 /* Constants */
 
-#define S_DEBUG 1
+#define S_DEBUG 0
 #define S_DEBUG_PATH 0
-#define S_DEBUG_TOKEN 1
+#define S_DEBUG_TOKEN 0
 #define S_OR 47
 #define S_STRING 34
 #define S_SPACE 32
@@ -59,22 +59,20 @@ int handle_group_rule(const char *request, derivation_tree *previous_node, const
 int check_for_syntax(const char *request, derivation_tree *previous_node, const char *rule_descr, const char *rule_end){
 	derivation_tree *current_node = NULL;
 	int token_length = 0;
-	//int before_token_length = 0;
 	int next_token_length = -1;
-	//int is_last_valid = -1;
 	int is_valid = 0;
 
-	//int nbr_correct_rule = 0;
-	//int nbr_rule = 0;
-
 	char *before_pos = NULL;
-
-	//char *start_pos = NULL;
-	//char *end_pos = NULL;
-
-	char *or_pos = NULL;
 	char *next_pos = NULL;
 
+	if ( get_end_or_group( rule_descr, rule_end) != NULL )
+	{
+		token_length = handle_or_rule(request, previous_node, rule_descr, rule_end, &next_pos);
+
+		is_valid = token_length != S_NOT_VALID;
+
+		rule_descr = next_pos;
+	}
 	while (reach_str_end(rule_descr, rule_end) == 0)
 	{
 		if ( S_DEBUG ) printf("RULE : %.*s\n", (rule_end-rule_descr),rule_descr);
@@ -83,50 +81,41 @@ int check_for_syntax(const char *request, derivation_tree *previous_node, const 
 		next_token_length = -1;
 		is_valid = 0;
 
-		or_pos = get_end_or_group( rule_descr, rule_end);
-		if ( or_pos != NULL )
-		{
-			/* TODO : Check for or and call check for each block of the or*/
+		if ( *rule_descr == S_STRING){
+				
+			next_token_length = handle_terminal_string_rule( request, rule_descr, rule_end, &next_pos);
+
+		}else if ( *rule_descr == '%') {
+
+			next_token_length = handle_terminal_number_rule( *request, rule_descr, rule_end, &next_pos);
+
+		}else if ( *rule_descr == '*' || (*rule_descr >= '0' && *rule_descr <= '9' ) ) {
+				
+			next_token_length = handle_repetition_rule( request, previous_node, rule_descr, rule_end, &next_pos);
+
+		}else if ( *rule_descr == '[') {
+
+			next_token_length = handle_optional_rule( request, previous_node,  rule_descr, rule_end, &next_pos);
+
+		}else if ( *rule_descr == '(') {
+
+			next_token_length = handle_group_rule( request, previous_node, rule_descr, rule_end, &next_pos);
+
+		}else{
+				
+			int length = get_end_rule( rule_descr, rule_end) - rule_descr + 1;  //We Get the length of the name of the embedeed Rule.
+			abnf_rule *new_rule = get_abnf_rule( rule_descr, length); //We get the new abnf rule.
+
+			// TODO : Créer current_node  (level + 1) (Child NULL) (TAG new_rule->name) (Value -> request)
+
+			next_token_length = check_for_syntax( request, current_node, new_rule->description, NULL);
+
+			if (next_token_length != S_NOT_VALID){
+			next_pos = get_next_rule(rule_descr, rule_end);
+			} // TODO :  Add current to previous
+			else ;// TODO : Delete Tree depuis current
 		}
-		else {
-
-			if ( *rule_descr == S_STRING){
-				
-				next_token_length = handle_terminal_string_rule( request, rule_descr, rule_end, &next_pos);
-
-			}else if ( *rule_descr == '%') {
-
-				next_token_length = handle_terminal_number_rule( *request, rule_descr, rule_end, &next_pos);
-
-			}else if ( *rule_descr == '*' || (*rule_descr >= '0' && *rule_descr <= '9' ) ) {
-				
-				next_token_length = handle_repetition_rule( request, previous_node, rule_descr, rule_end, &next_pos);
-
-			}else if ( *rule_descr == '[') {
-
-				next_token_length = handle_optional_rule( request, previous_node,  rule_descr, rule_end, &next_pos);
-
-			}else if ( *rule_descr == '(') {
-
-				next_token_length = handle_group_rule( request, previous_node, rule_descr, rule_end, &next_pos);
-
-			}else{
-				
-				int length = get_end_rule( rule_descr, rule_end) - rule_descr + 1;  //We Get the length of the name of the embedeed Rule.
-				abnf_rule *new_rule = get_abnf_rule( rule_descr, length); //We get the new abnf rule.
-
-				// TODO : Créer current_node  (level + 1) (Child NULL) (TAG new_rule->name) (Value -> request)
-
-				next_token_length = check_for_syntax( request, current_node, new_rule->description, NULL);
-
-				
-
-				if (next_token_length != S_NOT_VALID){
-					next_pos = get_next_rule(rule_descr, rule_end);
-				} // TODO :  Add current to previous
-				else ;// TODO : Delete Tree depuis current
-			}
-		}
+		
 
 		if ( S_DEBUG_PATH ) printf("Path -> Next_rule : %.*s\n", (rule_end-next_pos),next_pos);
 
@@ -209,7 +198,7 @@ char *get_next_rule(const char *str, const char *str_end){
 	if (n_str != NULL) {
 		n_str++;
 		while ( *n_str == S_SPACE) n_str++;
-		if ( *n_str == '\0' || *n_str == ']' || *n_str == ')') n_str = NULL;
+		if (n_str != NULL && ( *n_str == '\0' || *n_str == ']' || *n_str == ')')) n_str = NULL;
 	}
 	return  n_str;
 }
@@ -241,14 +230,13 @@ char *get_end_group(const char *str, const char *str_end, char open, char close)
 	return NULL;
 }
 
-char *get_end_or(const char *str, const char *str_end){
-	printf("Not Implemented\n");
-	return NULL;
-}
-
 char *get_end_or_group(const char *str, const char *str_end){
-	//printf("Not Implemented\n");
-	return NULL;
+	while ( !reach_str_end(str,str_end) && *str != '/')
+	{
+		str = get_next_rule(str, str_end);
+	}
+	if (reach_str_end(str,str_end)) return NULL;
+	return str;
 }
 
 int handle_terminal_number_rule(char c, const char *rule, const char *rule_end, char **next_srt){
@@ -308,8 +296,29 @@ int handle_terminal_string_rule(const char *request, const char *rule, const cha
 }
 
 int handle_or_rule(const char *request, derivation_tree *previous_node, const char *rule, const char *rule_end, char **next_srt){
-	printf("Not Implemented\n");
-	return 0;
+	int token_length = S_NOT_VALID;
+	int is_valid = 0;
+
+	char *or_pos = get_end_or_group(rule, rule_end);
+	*next_srt = NULL;
+
+	while (!reach_str_end(rule, rule_end) && token_length == S_NOT_VALID)
+	{
+		if ( or_pos == NULL) token_length = check_for_syntax(request, previous_node, rule, NULL);
+		else token_length = check_for_syntax(request, previous_node, rule, or_pos - 1);
+		
+		is_valid = token_length != S_NOT_VALID;
+
+		if (!is_valid)
+		{	
+			if ( or_pos == NULL) rule = NULL;
+			else{
+		    	rule = get_next_rule(or_pos + 1, rule_end);
+				or_pos = get_end_or_group(rule, rule_end);
+			}
+		}
+	}
+	return token_length;
 }
 
 int handle_repetition_rule(const char *request, derivation_tree *previous_node, const char *rule, const char *rule_end, char **next_srt){
@@ -363,6 +372,6 @@ static abnf_rule rules[] = {
 	{"message","debut ( mot ponct / nombre separateur ) [ ponct ] fin LF"},
 	// HTTP ABNF
 	{"TEST_TEXT","\"Bonjour je suis\" SP \"ça va ?\""},
-	{"TEST","SP TEST_TEXT SP (HTAB (DQUOTE))"},
+	{"TEST","SP TEST_TEXT SP (HTAB (DQUOTE)) / SP "},
 	{NULL,NULL}
 }; /**< All abnf rules*/
