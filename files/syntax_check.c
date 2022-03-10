@@ -19,6 +19,7 @@
 #define S_STRING 34
 #define S_SPACE 32
 #define S_NOT_VALID -1
+#define MAX_INT 2147483647
 
 /* Declaration */
 
@@ -52,6 +53,8 @@ int handle_repetition_rule(const char *request, derivation_tree *previous_node, 
 
 int handle_optional_rule(const char *request, derivation_tree *previous_node, const char *rule, const char *rule_end, char **next_srt);
 
+int handle_repetition(const char *request, derivation_tree *previous_node, const char *rule, const char *rule_end, int min, int max);
+
 int handle_group_rule(const char *request, derivation_tree *previous_node, const char *rule, const char *rule_end, char **next_srt);
 
 /* Definition */
@@ -82,27 +85,38 @@ int check_for_syntax(const char *request, derivation_tree *previous_node, const 
 		is_valid = 0;
 
 		if ( *rule_descr == S_STRING){
-				
+
+			if ( S_DEBUG_PATH ) printf("Path -> String\n");
 			next_token_length = handle_terminal_string_rule( request, rule_descr, rule_end, &next_pos);
+			if ( S_DEBUG_PATH ) printf("Path <- String : %d\n", next_token_length);
 
 		}else if ( *rule_descr == '%') {
 
+			if ( S_DEBUG_PATH ) printf("Path -> Number\n");
 			next_token_length = handle_terminal_number_rule( *request, rule_descr, rule_end, &next_pos);
+			if ( S_DEBUG_PATH ) printf("Path <- Number : %d\n", next_token_length);
 
 		}else if ( *rule_descr == '*' || (*rule_descr >= '0' && *rule_descr <= '9' ) ) {
 				
+			if ( S_DEBUG_PATH ) printf("Path -> Repetition\n");
 			next_token_length = handle_repetition_rule( request, previous_node, rule_descr, rule_end, &next_pos);
+			if ( S_DEBUG_PATH ) printf("Path <- Repetition : %d\n", next_token_length);
 
 		}else if ( *rule_descr == '[') {
-
+			
+			if ( S_DEBUG_PATH ) printf("Path -> Option\n");
 			next_token_length = handle_optional_rule( request, previous_node,  rule_descr, rule_end, &next_pos);
+			if ( S_DEBUG_PATH ) printf("Path <- Option : %d\n", next_token_length);
 
 		}else if ( *rule_descr == '(') {
 
+			if ( S_DEBUG_PATH ) printf("Path -> Group\n");
 			next_token_length = handle_group_rule( request, previous_node, rule_descr, rule_end, &next_pos);
+			if ( S_DEBUG_PATH ) printf("Path <- Group : %d\n", next_token_length);
 
 		}else{
-				
+			
+			if ( S_DEBUG_PATH ) printf("Path -> Embedeed\n");
 			int length = get_end_rule( rule_descr, rule_end) - rule_descr + 1;  //We Get the length of the name of the embedeed Rule.
 			abnf_rule *new_rule = get_abnf_rule( rule_descr, length); //We get the new abnf rule.
 
@@ -114,10 +128,12 @@ int check_for_syntax(const char *request, derivation_tree *previous_node, const 
 			next_pos = get_next_rule(rule_descr, rule_end);
 			} // TODO :  Add current to previous
 			else ;// TODO : Delete Tree depuis current
+
+			if ( S_DEBUG_PATH ) printf("Path <- Embedeed : %d\n", next_token_length);
 		}
 		
 
-		if ( S_DEBUG_PATH ) printf("Path -> Next_rule : %.*s\n", (rule_end-next_pos),next_pos);
+		
 
 		is_valid = next_token_length != S_NOT_VALID;
 		
@@ -129,10 +145,13 @@ int check_for_syntax(const char *request, derivation_tree *previous_node, const 
 		rule_descr = next_pos;  // Is NULL if we got an error so we stop
 	}
 	
+	
+
 	if ( is_valid == 0 )
 	{
 		/* TODO : ADD RETURN FAILED */
-		return -1;
+		if ( S_DEBUG_TOKEN ) printf("Token (%d)\n",S_NOT_VALID);
+		return S_NOT_VALID;
 	}
 	else
 	{
@@ -174,6 +193,9 @@ char *cs_strpbrk(const char *str_1, const char *str_2, const char *str_end){
 }
 
 char *get_end_rule(const char *str, const char *str_end){
+
+	while ( *str == '*' || (*str >= '0' && *str <= '9' ) ) str++;
+
 	switch ( *str)
 	{
 	case '[':
@@ -322,13 +344,63 @@ int handle_or_rule(const char *request, derivation_tree *previous_node, const ch
 }
 
 int handle_repetition_rule(const char *request, derivation_tree *previous_node, const char *rule, const char *rule_end, char **next_srt){
-	printf("Not Implemented\n");
-	return 0;
+	int min = 0, max = MAX_INT;
+	char *t_str = (char *)rule;
+	char **temp_pos = &t_str;
+	char *s_str = NULL;
+	char *e_str = NULL;
+
+	if (*t_str != '*') min = strtol(t_str, temp_pos, 10); //We get the minimal amount.
+
+	t_str = *temp_pos;
+
+	if (*t_str == '*'){ //We get the max amount.
+		max = strtol( t_str + 1, temp_pos, 10);
+		if (max == 0) max = MAX_INT; //Case of * not present so an extact amount of repetition.
+	}else max = min;
+		
+	t_str = *temp_pos; 
+
+	s_str = get_start_rule(t_str, rule_end);
+    e_str = get_end_rule(t_str, rule_end) + 1;
+
+	//printf("Reglesssss : %.*s\n", (e_str - s_str + 1), s_str);
+
+	int token_length = handle_repetition(request, previous_node, t_str, e_str, min, max);
+
+	if ( token_length != S_NOT_VALID) *next_srt = get_next_rule(rule, rule_end);
+	
+	return token_length;
+}
+
+int handle_repetition(const char *request, derivation_tree *previous_node, const char *rule, const char *rule_end, int min, int max){
+	int n = 0;
+	int token_length = 0;
+	int next_token_length = 0;
+	while ( n <= max && next_token_length != S_NOT_VALID)
+	{
+		next_token_length = check_for_syntax(request, previous_node, rule, rule_end);
+		
+		if ( next_token_length != S_NOT_VALID )
+		{
+			n++;
+			token_length += next_token_length;
+			request += next_token_length;
+		}
+	}
+	
+	return (n >= min && n <= max) ? token_length :  S_NOT_VALID;
 }
 
 int handle_optional_rule(const char *request, derivation_tree *previous_node, const char *rule, const char *rule_end, char **next_srt){
-	printf("Not Implemented\n");
-	return 0;
+	char *s_str = get_start_rule(rule, rule_end);
+    char *e_str = get_end_rule(rule, rule_end);
+
+	int token_length = handle_repetition(request, previous_node, s_str, e_str, 0, 1);
+
+	if ( token_length != S_NOT_VALID ) *next_srt = get_next_rule(rule, rule_end);
+	
+	return token_length;
 }
 
 int handle_group_rule(const char *request, derivation_tree *previous_node, const char *rule, const char *rule_end, char **next_srt){
@@ -347,31 +419,31 @@ int handle_group_rule(const char *request, derivation_tree *previous_node, const
 
 static abnf_rule rules[] = {
 	// Specials sets
-	{"ALPHA","%x41-5A / %x61-7A"},
-	{"BIT"," \"0\" / \"1\""},
-	{"CHAR","%x01-7F"},
-	{"VCHAR","%x21-7E"},
-	{"OCTET","%x00-FF"},
-	{"DIGIT","%x30-39"},
-	{"HEXDIG","DIGIT / \"A\" / \"B\" / \"C\" / \"D\" / \"E\" / \"F\""},
+	{"ALPHA","%x41-5A / %x61-7A "},
+	{"BIT"," \"0\" / \"1\" "},
+	{"CHAR","%x01-7F "},
+	{"VCHAR","%x21-7E "},
+	{"OCTET","%x00-FF "},
+	{"DIGIT","%x30-39 "},
+	{"HEXDIG","DIGIT / \"A\" / \"B\" / \"C\" / \"D\" / \"E\" / \"F\" "},
 	// Specials Characters
-	{"CR","%x0D"},
-	{"CRLF","CR LF"},
-	{"HTAB","%x09"},
-	{"LF","%x0A"},
-	{"SP","%x20"},
-	{"DQUOTE","%x22"},
-	{"WSP","SP / HTAB"},
+	{"CR","%x0D "},
+	{"CRLF","CR LF "},
+	{"HTAB","%x09 "},
+	{"LF","%x0A "},
+	{"SP","%x20 "},
+	{"DQUOTE","%x22 "},
+	{"WSP","SP / HTAB "},
 	// TEST ABNF
-	{"nombre","1*DIGIT"},
-	{"ponct","\",\" / \".\" / \"!\" / \"?\" / \":\""},
-	{"separateur","SP / HTAB / \"-\" / \"_\""},
-	{"debut","\"start\""},
-	{"fin","\"fin\""},
-	{"mot","1*ALPHA separateur"},
-	{"message","debut ( mot ponct / nombre separateur ) [ ponct ] fin LF"},
+	{"nombre","1*DIGIT "},
+	{"ponct","\",\" / \".\" / \"!\" / \"?\" / \":\" "},
+	{"separateur","SP / HTAB / \"-\" / \"_\" "},
+	{"debut","\"start\" "},
+	{"fin","\"fin\" "},
+	{"mot","1*ALPHA separateur "},
+	{"message","debut 2*(mot ponct / nombre separateur) [ponct] fin LF "},
 	// HTTP ABNF
-	{"TEST_TEXT","\"Bonjour je suis\" SP \"ça va ?\""},
-	{"TEST","SP TEST_TEXT SP (HTAB (DQUOTE)) / SP "},
+	{"TEST_TEXT","\"Bonjour je suis\" SP \"ça va ?\" "},
+	{"TEST","SP TEST_TEXT SP (HTAB (DQUOTE)) / 2*SP [SP] "},
 	{NULL,NULL}
 }; /**< All abnf rules*/
