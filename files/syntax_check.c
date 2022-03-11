@@ -47,20 +47,22 @@ int handle_terminal_number_rule(char c, const char *rule, const char *rule_end, 
 
 int handle_terminal_string_rule(const char *request, const char *rule, const char *rule_end, char **next_srt);
 
-int handle_or_rule(const char *request, derivation_tree *previous_node, const char *rule, const char *rule_end, char **next_srt);
+int handle_or_rule(const char *request, linked_child **current_list, const char *rule, const char *rule_end, int level, char **next_srt);
 
-int handle_repetition_rule(const char *request, derivation_tree *previous_node, const char *rule, const char *rule_end, char **next_srt);
+int handle_repetition_rule(const char *request, linked_child **current_list, const char *rule, const char *rule_end, int level, char **next_srt);
 
-int handle_optional_rule(const char *request, derivation_tree *previous_node, const char *rule, const char *rule_end, char **next_srt);
+int handle_optional_rule(const char *request, linked_child **current_list, const char *rule, const char *rule_end, int level, char **next_srt);
 
-int handle_repetition(const char *request, derivation_tree *previous_node, const char *rule, const char *rule_end, int min, int max);
+int handle_repetition(const char *request, linked_child **current_list, const char *rule, const char *rule_end, int min, int max, int level);
 
-int handle_group_rule(const char *request, derivation_tree *previous_node, const char *rule, const char *rule_end, char **next_srt);
+int handle_group_rule(const char *request, linked_child **current_list, const char *rule, const char *rule_end, int level, char **next_srt);
 
 /* Definition */
 
-int check_for_syntax(const char *request, derivation_tree *previous_node, const char *rule_descr, const char *rule_end){
+int check_for_syntax(const char *request, linked_child **current_list, const char *rule_descr, const char *rule_end, int level){
 	derivation_tree *current_node = NULL;
+	linked_child *tempory_list = NULL;
+
 	int token_length = 0;
 	int next_token_length = -1;
 	int is_valid = 0;
@@ -69,7 +71,7 @@ int check_for_syntax(const char *request, derivation_tree *previous_node, const 
 
 	if ( get_end_or_group( rule_descr, rule_end) != NULL )
 	{
-		token_length = handle_or_rule(request, previous_node, rule_descr, rule_end, &next_pos);
+		token_length = handle_or_rule(request, &tempory_list, rule_descr, rule_end, level, &next_pos);
 
 		is_valid = token_length != S_NOT_VALID;
 
@@ -82,6 +84,7 @@ int check_for_syntax(const char *request, derivation_tree *previous_node, const 
 		next_pos = NULL;
 		next_token_length = -1;
 		is_valid = 0;
+		
 
 		if ( *rule_descr == S_STRING){
 
@@ -98,19 +101,19 @@ int check_for_syntax(const char *request, derivation_tree *previous_node, const 
 		}else if ( *rule_descr == '*' || (*rule_descr >= '0' && *rule_descr <= '9' ) ) {
 				
 			if ( S_DEBUG_PATH ) printf("Path -> Repetition\n");
-			next_token_length = handle_repetition_rule( request, previous_node, rule_descr, rule_end, &next_pos);
+			next_token_length = handle_repetition_rule( request, &tempory_list, rule_descr, rule_end, level, &next_pos);
 			if ( S_DEBUG_PATH ) printf("Path <- Repetition : %d\n", next_token_length);
 
 		}else if ( *rule_descr == '[') {
 			
 			if ( S_DEBUG_PATH ) printf("Path -> Option\n");
-			next_token_length = handle_optional_rule( request, previous_node,  rule_descr, rule_end, &next_pos);
+			next_token_length = handle_optional_rule( request, &tempory_list,  rule_descr, rule_end, level, &next_pos);
 			if ( S_DEBUG_PATH ) printf("Path <- Option : %d\n", next_token_length);
 
 		}else if ( *rule_descr == '(') {
 
 			if ( S_DEBUG_PATH ) printf("Path -> Group\n");
-			next_token_length = handle_group_rule( request, previous_node, rule_descr, rule_end, &next_pos);
+			next_token_length = handle_group_rule( request, &tempory_list, rule_descr, rule_end, level, &next_pos);
 			if ( S_DEBUG_PATH ) printf("Path <- Group : %d\n", next_token_length);
 
 		}else{
@@ -119,18 +122,17 @@ int check_for_syntax(const char *request, derivation_tree *previous_node, const 
 			int length = get_end_rule( rule_descr, rule_end) - rule_descr + 1;  //We Get the length of the name of the embedeed Rule.
 			abnf_rule *new_rule = get_abnf_rule( rule_descr, length); //We get the new abnf rule.
 
-			current_node = create_tree_node(new_rule->name, request, 0, previous_node->tree_level + 1);
+			current_node = create_tree_node(new_rule->name, request, 0, level + 1);
 
-			next_token_length = check_for_syntax( request, current_node, new_rule->description, NULL);
+			next_token_length = check_for_syntax( request, &(current_node->children), new_rule->description, NULL, level + 1);
 
 			if (next_token_length != S_NOT_VALID){
 			 	next_pos = get_next_rule(rule_descr, rule_end);
 				current_node->value_length = next_token_length;
-				add_child_to_node(previous_node, current_node);
+				add_child_to_list(&tempory_list, current_node);
 			} 
 			else {
 				purge_tree_node(current_node);
-				current_node = NULL;
 			}
 
 			if ( S_DEBUG_PATH ) printf("Path <- Embedeed : %d\n", next_token_length);
@@ -148,17 +150,20 @@ int check_for_syntax(const char *request, derivation_tree *previous_node, const 
 	
 	if ( is_valid == 0 )
 	{
+		purge_linked_children(&tempory_list);
 		if ( S_DEBUG_TOKEN ) printf("Token (%d)\n",S_NOT_VALID);
 		return S_NOT_VALID;
 	}
 	else
 	{	
-		
+		add_list_to_list(current_list, tempory_list);
 		if ( S_DEBUG_TOKEN ) printf("Token (%d)\n",token_length);
 		return token_length;
 	}
 	
 }
+
+#pragma region SubFunctions
 
 abnf_rule *get_abnf_rule(const char *name, int name_length){
 	abnf_rule *temp_rules = rules;
@@ -314,7 +319,7 @@ int handle_terminal_string_rule(const char *request, const char *rule, const cha
 	return S_NOT_VALID;
 }
 
-int handle_or_rule(const char *request, derivation_tree *previous_node, const char *rule, const char *rule_end, char **next_srt){
+int handle_or_rule(const char *request, linked_child **current_list, const char *rule, const char *rule_end, int level, char **next_srt){
 	int token_length = S_NOT_VALID;
 	int is_valid = 0;
 
@@ -323,8 +328,8 @@ int handle_or_rule(const char *request, derivation_tree *previous_node, const ch
 
 	while (!reach_str_end(rule, rule_end) && token_length == S_NOT_VALID)
 	{
-		if ( or_pos == NULL) token_length = check_for_syntax(request, previous_node, rule, NULL);
-		else token_length = check_for_syntax(request, previous_node, rule, or_pos - 1);
+		if ( or_pos == NULL) token_length = check_for_syntax(request, current_list, rule, NULL, level);
+		else token_length = check_for_syntax(request, current_list, rule, or_pos - 1, level);
 		
 		is_valid = token_length != S_NOT_VALID;
 
@@ -340,7 +345,7 @@ int handle_or_rule(const char *request, derivation_tree *previous_node, const ch
 	return token_length;
 }
 
-int handle_repetition_rule(const char *request, derivation_tree *previous_node, const char *rule, const char *rule_end, char **next_srt){
+int handle_repetition_rule(const char *request, linked_child **current_list, const char *rule, const char *rule_end, int level, char **next_srt){
 	int min = 0, max = MAX_INT;
 	char *t_str = (char *)rule;
 	char **temp_pos = &t_str;
@@ -361,20 +366,20 @@ int handle_repetition_rule(const char *request, derivation_tree *previous_node, 
 
 	//printf("Reglesssss : %.*s\n", (e_str - s_str + 1), s_str);
 
-	int token_length = handle_repetition(request, previous_node, t_str, e_str, min, max);
+	int token_length = handle_repetition(request, current_list, t_str, e_str, min, max, level);
 
 	if ( token_length != S_NOT_VALID) *next_srt = get_next_rule(rule, rule_end);
 	
 	return token_length;
 }
 
-int handle_repetition(const char *request, derivation_tree *previous_node, const char *rule, const char *rule_end, int min, int max){
+int handle_repetition(const char *request, linked_child **current_list, const char *rule, const char *rule_end, int min, int max, int level){
 	int n = 0;
 	int token_length = 0;
 	int next_token_length = 0;
 	while ( n <= max && next_token_length != S_NOT_VALID)
 	{
-		next_token_length = check_for_syntax(request, previous_node, rule, rule_end);
+		next_token_length = check_for_syntax(request, current_list, rule, rule_end, level);
 		
 		if ( next_token_length != S_NOT_VALID )
 		{
@@ -387,21 +392,21 @@ int handle_repetition(const char *request, derivation_tree *previous_node, const
 	return (n >= min && n <= max) ? token_length :  S_NOT_VALID;
 }
 
-int handle_optional_rule(const char *request, derivation_tree *previous_node, const char *rule, const char *rule_end, char **next_srt){
+int handle_optional_rule(const char *request, linked_child **current_list, const char *rule, const char *rule_end, int level, char **next_srt){
 	char *s_str = get_start_rule(rule, rule_end);
     char *e_str = get_end_rule(rule, rule_end);
 
-	int token_length = handle_repetition(request, previous_node, s_str, e_str, 0, 1);
+	int token_length = handle_repetition(request, current_list, s_str, e_str, 0, 1, level);
 
 	if ( token_length != S_NOT_VALID ) *next_srt = get_next_rule(rule, rule_end);
 	
 	return token_length;
 }
 
-int handle_group_rule(const char *request, derivation_tree *previous_node, const char *rule, const char *rule_end, char **next_srt){
+int handle_group_rule(const char *request, linked_child **current_list, const char *rule, const char *rule_end, int level, char **next_srt){
 	char *s_str = get_start_rule(rule, rule_end);
     char *e_str = get_end_rule(rule, rule_end);
-	int token_length = check_for_syntax(request, previous_node, s_str, e_str);
+	int token_length = check_for_syntax(request, current_list, s_str, e_str, level);
 
 	if ( token_length != S_NOT_VALID) {
 		*next_srt = get_next_rule(rule,rule_end);
@@ -409,6 +414,7 @@ int handle_group_rule(const char *request, derivation_tree *previous_node, const
 
 	return token_length;
 }
+#pragma endregion
 
 /* Abnf_rules */
 
@@ -438,5 +444,6 @@ static abnf_rule rules[] = {
 	{"mot","1*ALPHA separateur "},
 	{"message","debut 2*(mot ponct / nombre separateur) [ponct] fin LF "},
 	// HTTP ABNF
+	{"test","debut 2*( 2*mot ponct / 2*mot separateur) fin LF "},
 	{NULL,NULL}
 }; /**< All abnf rules*/

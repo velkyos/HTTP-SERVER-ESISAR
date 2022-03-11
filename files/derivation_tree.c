@@ -15,7 +15,7 @@
 
 /* Definition */
 
-derivation_tree *create_tree_node(const char *tag, char *value, int value_length, int tree_level){
+derivation_tree *create_tree_node(const char *tag,const char *value, int value_length, int tree_level){
 	derivation_tree *node = (derivation_tree *)malloc( sizeof(derivation_tree) );
 	node->tag = tag;
 	node->value = value;
@@ -25,46 +25,59 @@ derivation_tree *create_tree_node(const char *tag, char *value, int value_length
 	return node;
 }
 
-void add_child_to_node(derivation_tree *node, derivation_tree *child){
+void add_list_to_list(linked_child **main_list, linked_child *list){
 	linked_child *ptr = NULL;
-	linked_child *new_link = (linked_child *)malloc( sizeof(linked_child) );
-	new_link->next = NULL;
-	new_link->node = child;
-
-	if (node->children == NULL) node->children = new_link;
+	if (*main_list == NULL) *main_list = list;
 	else{
-		ptr = node->children;
+		ptr = *main_list;
 		while ( ptr->next != NULL)
 		{
 			ptr = ptr->next;
 		}
-		ptr->next = new_link;
+		ptr->next = list;
 	}
+	return ;
+}
+
+void add_child_to_list(linked_child **main_list, derivation_tree *child){
+	linked_child *new_link = (linked_child *)malloc( sizeof(linked_child) );
+	new_link->next = NULL;
+	new_link->node = child;
+
+	add_list_to_list(main_list, new_link);
+	return;
+}
+
+void add_child_to_node(derivation_tree *node, derivation_tree *child){
+	add_child_to_list(&(node->children), child);
+	return;
 }
 
 
-void purge_linked_children(derivation_tree *node){
-	linked_child *ptr = node->children;
+void purge_linked_children(linked_child **main_list){
+	linked_child *ptr = NULL;
 
-	while ( node->children != NULL)
+	while ( *main_list != NULL)
 	{
-		ptr = node->children;
-		node->children = ptr->next;
+		ptr = *main_list;
+		*main_list = ptr->next;
 
 		purge_tree_node(ptr->node);
 		ptr->node = NULL;
 		ptr->next = NULL;
 		free(ptr);
 	}
+	return;
 }
 
 void purge_tree_node(derivation_tree *node){
 	if ( T_DEBUG ) printf("Purge : %s\n", node->tag);
 
-	purge_linked_children(node);
+	purge_linked_children(&(node->children));
 
 	node->tag = NULL;
 	node->value = NULL;
 	node->children = NULL;
 	free(node);
+	return;
 }

@@ -24,7 +24,7 @@
 	 * @param rule_end The pointer to the end of the part of rule_descr we want to check, NULL if the end is the end of rule_descr.
 	 * @return Return -1 if the request as a syntax error or the number of correct characters.
 	 */
-	int check_for_syntax(const char *request, derivation_tree *previous_node, const char *rule_descr, const char *rule_end);
+	int check_for_syntax(const char *request, linked_child **previous_tree, const char *rule_descr, const char *rule_end, int level);
 
 	/**
 	 * @brief Get the abnf_rule corresponding to name.

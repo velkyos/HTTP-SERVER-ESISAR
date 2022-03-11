@@ -7,8 +7,8 @@
 #include <sys/mman.h>
 #include <fcntl.h>
 #include <errno.h>
-
 #include "api.h" 
+#include "derivation_tree.h"
 
 #define false 0 
 
@@ -43,6 +43,7 @@ int main(int argc,char *argv[])
 	}
 	// call parser and get results. 
 	if (res=parseur(addr,st.st_size)) {
+		printf("Sucess !\n");
 		_Token *r,*tok; 
 		void *root=NULL;
 		root=getRootTree(); 

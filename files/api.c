@@ -7,21 +7,30 @@
 
 
 _Token *recursif_search_tree(derivation_tree *start, char *name, _Token *list);
-
+void add_token_to_list(_Token *list, derivation_tree *node);
 
 derivation_tree *root = NULL;
 
 int parseur(char *req, int len){
-	root = create_tree_node("message",req,len,0);
+	root = create_tree_node("test",req,len,0);
+	linked_child *root_list = NULL;
+	linked_child *new_list = NULL;
+	abnf_rule *rule = get_abnf_rule("test", 4);
 
-	abnf_rule *rule = get_abnf_rule("message", 7);
-	int n = check_for_syntax(req, root, rule->description, NULL);
+	int n = check_for_syntax(req, &root_list, rule->description, NULL, 0);
+
+	/*add_child_to_list(&new_list, create_tree_node("mot","Nonj",4,1));
+	add_child_to_list(&new_list, create_tree_node("mot","Nttnj",5,1));
+	add_child_to_list(&new_list, create_tree_node("mot","Ngdj",4,1));
+	add_child_to_node(new_list->node, create_tree_node("mot","Loin",4,1));*/
+
+	root->children = root_list;
 
 	if ( n == len ) {
 		return n;
 	}
 	else {
-		return 0;
+		return 1;
 	}
 }
 
@@ -45,7 +54,7 @@ _Token *searchTree(void *start,char *name){
 }
 
 char *getElementTag(void *node,int *len){
-	char *tag = ( (derivation_tree *)node )->tag;
+	char *tag = (char *) ((derivation_tree *)node)->tag;
 	if ( len != NULL){
 		*len = strlen(tag);
 	}
@@ -53,10 +62,11 @@ char *getElementTag(void *node,int *len){
 }
 
 char *getElementValue(void *node,int *len){
+	char *value = (char *) ((derivation_tree *)node )->value;
 	if ( len != NULL){
 		*len = ( (derivation_tree *)node )->value_length;
 	}
-	return ( (derivation_tree *)node )->value;
+	return value;
 }
 
 void purgeElement(_Token **r){
@@ -72,13 +82,13 @@ void purgeElement(_Token **r){
 		temp->next = NULL;
 		free(temp);
 	}
+
 }
 
 void purgeTree(void *root){
 	purge_tree_node(root);
 	root = NULL;
 } 
-
 
 
 _Token *recursif_search_tree(derivation_tree *start, char *name, _Token *list){
