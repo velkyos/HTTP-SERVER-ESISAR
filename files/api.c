@@ -6,31 +6,27 @@
 #include "syntax_check.h"
 
 
-_Token *recursif_search_tree(derivation_tree *start, char *name, _Token *list);
+void recursif_search_tree(derivation_tree *start, char *name, _Token *list);
 void add_token_to_list(_Token *list, derivation_tree *node);
 
 derivation_tree *root = NULL;
 
 int parseur(char *req, int len){
-	root = create_tree_node("test",req,len,0);
+	root = create_tree_node("HTTP-message",req,len,0);
 	linked_child *root_list = NULL;
 	linked_child *new_list = NULL;
-	abnf_rule *rule = get_abnf_rule("test", 4);
+	abnf_rule *rule = get_abnf_rule("HTTP-message", 4);
 
 	int n = check_for_syntax(req, &root_list, rule->description, NULL, 0);
 
-	/*add_child_to_list(&new_list, create_tree_node("mot","Nonj",4,1));
-	add_child_to_list(&new_list, create_tree_node("mot","Nttnj",5,1));
-	add_child_to_list(&new_list, create_tree_node("mot","Ngdj",4,1));
-	add_child_to_node(new_list->node, create_tree_node("mot","Loin",4,1));*/
-
 	root->children = root_list;
+	if (root->children == NULL) printf("No results\n");
 
 	if ( n == len ) {
 		return n;
 	}
 	else {
-		return 1;
+		return 0;
 	}
 }
 
@@ -49,7 +45,12 @@ _Token *searchTree(void *start,char *name){
 
 	if ( strcmp (start_node->tag , name) == 0) list->node = start_node;
 	else recursif_search_tree( start_node, name, list);
-
+	if (list->node == NULL && list->next == NULL)
+	{
+		free(list);
+		printf("Didn't Find any %s !\n", name);
+		return NULL;
+	}
 	return list;
 }
 
@@ -91,10 +92,11 @@ void purgeTree(void *root){
 } 
 
 
-_Token *recursif_search_tree(derivation_tree *start, char *name, _Token *list){
+void recursif_search_tree(derivation_tree *start, char *name, _Token *list){
+	
 	derivation_tree *ptr_node = start;
 	linked_child *ptr_child = NULL;
-
+	
 	ptr_child = ptr_node->children;
 	while (ptr_child != NULL)
 	{
@@ -107,7 +109,6 @@ _Token *recursif_search_tree(derivation_tree *start, char *name, _Token *list){
 		}
 		recursif_search_tree(ptr_node, name, list);
 	}
-	return list;
 }
 
 void add_token_to_list(_Token *list, derivation_tree *node){
