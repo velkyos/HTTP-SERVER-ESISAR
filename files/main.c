@@ -31,7 +31,7 @@ int main(int argc,char *argv[])
                 return false;
 
 	// This is a special HACK since identificateur in C can't have character '-'
-
+	
 	if (argc == 3 ) { 
 		p=argv[2]; 	
 		printf("searching for %s\n",p); 

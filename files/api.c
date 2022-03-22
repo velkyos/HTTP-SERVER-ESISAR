@@ -14,8 +14,7 @@ derivation_tree *root = NULL;
 int parseur(char *req, int len){
 	root = create_tree_node("HTTP-message",req,len,0);
 	linked_child *root_list = NULL;
-	linked_child *new_list = NULL;
-	abnf_rule *rule = get_abnf_rule("HTTP-message", 4);
+	abnf_rule *rule = get_abnf_rule("HTTP-message", 12);
 
 	int n = check_for_syntax(req, &root_list, rule->description, NULL, 0);
 
