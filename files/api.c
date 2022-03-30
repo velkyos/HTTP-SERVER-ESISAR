@@ -9,6 +9,8 @@
 void recursif_search_tree(derivation_tree *start, char *name, _Token *list);
 void add_token_to_list(_Token *list, derivation_tree *node);
 
+
+//L'adresse du Root;
 derivation_tree *root = NULL;
 
 int parseur(char *req, int len){
@@ -19,7 +21,6 @@ int parseur(char *req, int len){
 	int n = check_for_syntax(req, &root_list, rule->description, NULL, 0);
 
 	root->children = root_list;
-	if (root->children == NULL) printf("No results\n");
 
 	if ( n == len ) {
 		return n;

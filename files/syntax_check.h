@@ -15,8 +15,8 @@
 
 	/**
 	 * @brief Check for the syntax validity of an HTTP request.
-	 * @see derivation_tree
-	 * @see abnf_rule
+	 * @see st_derivation_tree
+	 * @see st_abnf_rule
 	 * 
 	 * @param request The pointer to the request. ( Must be on the first character we want to check. )
 	 * @param previous_node The pointer to the previous node in the derivation tree.

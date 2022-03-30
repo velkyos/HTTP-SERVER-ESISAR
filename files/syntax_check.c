@@ -1,3 +1,14 @@
+/**
+ * @file syntax_check.c
+ * @author BENJAMIN ROBERT | MANDON ANAEL | PEDER LEO
+ * @brief Syntax check of HTTP request.
+ * @version 0.95
+ * @date 2022-03-30
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
+
 /* System Includes */
 
 #include <stdio.h>    //Printf
@@ -25,63 +36,203 @@
 
 static abnf_rule rules[];
 
+/**
+ * @brief A boolean function, who return 1 if str = '\0' or str > str_end.
+ * 
+ * @param str
+ * @param str_end 
+ * @return 1 or 0.
+ */
 int reach_str_end(const char *str, const char *str_end);
 
+/**
+ * @brief Custom version of strchr.
+ * 
+ * @param str The pointer to the string where you want to search.
+ * @param c The char you want to find.
+ * @param str_end The end of str_1.
+ * @return The pointer to the first match of c in str_1.
+ */
 char *cs_strchr(const char *str, char c, const char *str_end);
 
+/**
+ * @brief Custom version of the strpbrk function. With a end pointer instead of the end of str_1.
+ * 
+ * @param str_1 The pointer to the string where you want to search.
+ * @param str_2 The list of char you want to find in str_1.
+ * @param str_end The end of str_1.
+ * @return The pointer to the first match of any char from str_2 in str_1.
+ */
 char *cs_strpbrk(const char *str_1, const char *str_2, const char *str_end);
 
+/**
+ * @brief Get the end of the current rule.
+ * 
+ * @param str The pointer to the start of the abnf rule being checked.
+ * @param str_end The pointer to the end of the abnf rule being checked. Null if the end is the end of the string.
+ * @return The pointer to the end of the current rule.
+ */
 char *get_end_rule(const char *str, const char *str_end);
 
+/**
+ * @brief Get the start of the next rule.
+ * 
+ * @param str The pointer to the start of the abnf rule being checked.
+ * @param str_end The pointer to the end of the abnf rule being checked. Null if the end is the end of the string.
+ * @return The pointer to the start of the next rule.
+ */
 char *get_next_rule(const char *str, const char *str_end);
 
+/**
+ * @brief Get the start of the current rule.
+ * 
+ * @param str The pointer to the start of the abnf rule being checked.
+ * @param str_end The pointer to the end of the abnf rule being checked. Null if the end is the end of the string.
+ * @return The pointer to the start of the current rule. ( After the group start, ...)
+ */
 char *get_start_rule(const char *str, const char *str_end);
 
+/**
+ * @brief Get the pointer to the end of the group.
+ * 
+ * @param str The pointer to the start of the abnf rule being checked. Must be after the start of the group.
+ * @param str_end The pointer to the end of the abnf rule being checked. Null if the end is the end of the string.
+ * @param open The char who open the group.
+ * @param close The char who end the group.
+ * @return The pointer to the end of the group.
+ */
 char *get_end_group(const char *str, const char *str_end, char open, char close);
 
+/**
+ * @brief Get the pointer to the end of the current or part.
+ * 
+ * @param str The pointer to the start of the abnf rule being checked.
+ * @param str_end The pointer to the end of the abnf rule being checked. Null if the end is the end of the string.
+ * @return The pointer to the end of the current or part.
+ */
 char *get_end_or(const char *str, const char *str_end);
 
+/**
+ * @brief Get the pointer to the end of the or group (When one is right).
+ * 
+ * @param str The pointer to the start of the abnf rule being checked.
+ * @param str_end The pointer to the end of the abnf rule being checked. Null if the end is the end of the string.
+ * @return The pointer to the end of the or group.
+ */
 char *get_end_or_group(const char *str, const char *str_end);
 
-int handle_terminal_number_rule(const char *request, const char *rule, const char *rule_end, char **next_srt);
+/**
+ * @brief Handle all number rules. (In hexa format)
+ * 
+ * @param request The pointer to the current HTTP request.
+ * @param rule The pointer to the start of the abnf rule being checked.
+ * @param rule_end The pointer to the end of the abnf rule being checked. Null if the end is the end of the string.
+ * @param next_srt The value of the rule pointer after the execution of this function.
+ * @return How many char as been validated.
+ */
+int handle_terminal_number_rule(const unsigned char *request, const char *rule, const char *rule_end, char **next_srt);
 
+/**
+ * @brief Handle all string rules.
+ * 
+ * @param request The pointer to the current HTTP request.
+ * @param rule The pointer to the start of the abnf rule being checked.
+ * @param rule_end The pointer to the end of the abnf rule being checked. Null if the end is the end of the string.
+ * @param next_srt The value of the rule pointer after the execution of this function.
+ * @return How many char as been validated.
+ */
 int handle_terminal_string_rule(const char *request, const char *rule, const char *rule_end, char **next_srt);
 
+/**
+ * @brief Handle or rules. ' / '
+ * 
+ * @param request The pointer to the current HTTP request.
+ * @param current_list The pointer to current list of tree node.
+ * @param rule The pointer to the start of the abnf rule being checked.
+ * @param rule_end The pointer to the end of the abnf rule being checked. Null if the end is the end of the string.
+ * @param level The current level into the tree
+ * @param next_srt The value of the rule pointer after the execution of this function.
+ * @return How many char as been validated.
+ */
 int handle_or_rule(const char *request, linked_child **current_list, const char *rule, const char *rule_end, int level, char **next_srt);
 
+/**
+ * @brief Handle repetition rules. ' 4*2 '
+ * 
+ * @param request The pointer to the current HTTP request.
+ * @param current_list The pointer to current list of tree node.
+ * @param rule The pointer to the start of the abnf rule being checked.
+ * @param rule_end The pointer to the end of the abnf rule being checked. Null if the end is the end of the string.
+ * @param level The current level into the tree
+ * @param next_srt The value of the rule pointer after the execution of this function.
+ * @return How many char as been validated.
+ */
 int handle_repetition_rule(const char *request, linked_child **current_list, const char *rule, const char *rule_end, int level, char **next_srt);
 
+/**
+ * @brief Handle optional rules. ' [] '
+ * 
+ * @param request The pointer to the current HTTP request.
+ * @param current_list The pointer to current list of tree node.
+ * @param rule The pointer to the start of the abnf rule being checked.
+ * @param rule_end The pointer to the end of the abnf rule being checked. Null if the end is the end of the string.
+ * @param level The current level into the tree
+ * @param next_srt The value of the rule pointer after the execution of this function.
+ * @return How many char as been validated.
+ */
 int handle_optional_rule(const char *request, linked_child **current_list, const char *rule, const char *rule_end, int level, char **next_srt);
 
+/**
+ * @brief Handle exact repetition. Called by optional with 0 min and 1 max. Value can be from 0 to INT_MAX
+ * 
+ * @param request The pointer to the current HTTP request.
+ * @param current_list The pointer to current list of tree node.
+ * @param rule The pointer to the start of the abnf rule being checked.
+ * @param rule_end The pointer to the end of the abnf rule being checked. Null if the end is the end of the string.
+ * @param min How many interation minimum we want.
+ * @param max How many interation maximum we want.
+ * @param level The current level into the tree
+ * @return How many char as been validated.
+ */
 int handle_repetition(const char *request, linked_child **current_list, const char *rule, const char *rule_end, int min, int max, int level);
 
+/**
+ * @brief Handle group rule '( )'
+ * 
+ * @param request The pointer to the current HTTP request.
+ * @param current_list The pointer to current list of tree node.
+ * @param rule The pointer to the start of the abnf rule being checked.
+ * @param rule_end The pointer to the end of the abnf rule being checked. Null if the end is the end of the string.
+ * @param level The current level into the tree
+ * @param next_srt The value of the rule pointer after the execution of this function.
+ * @return How many char as been validated.
+ */
 int handle_group_rule(const char *request, linked_child **current_list, const char *rule, const char *rule_end, int level, char **next_srt);
+
+/**
+ * @brief Handle the message-body Rule
+ * 
+ * @param request The pointer to the request.
+ * @param next_srt The next pointer for the rule. NULL if there is a message body
+ * @return The char length of the message-body. 
+ */
+int handle_body_rule(const char *request, char **next_srt);
 
 /* Definition */
 
-/**
- * @brief Main function responsible of checking the syntax of the request.
- * 
- * @param request The pointer to the request.
- * @param current_list The pointer to the current list of node.
- * @param rule_descr The pointer to the start of the rule we need to analyse.
- * @param rule_end The pointer to the end of the rule we need to analyse. NULL if we go to the end of the string \0
- * @param level The current level into the tree.
- * @return How many char has been check or S_NOT_VALID if not valid
- */
 int check_for_syntax(const char *request, linked_child **current_list, const char *rule_descr, const char *rule_end, int level){
 	derivation_tree *current_node = NULL;
-	linked_child *tempory_list = NULL;
+	linked_child *temp_list = NULL; //A temporary list, we only add this list to current_list at the end if all the rule is good. 
 
 	int token_length = 0;
 	int next_token_length = -1;
 	int is_valid = 0;
 
-	char *next_pos = NULL;
+	char *next_pos = NULL; //The pointer to the next position in the abnf rule.
 
-	if ( get_end_or_group( rule_descr, rule_end) != NULL )
+	if ( get_end_or_group( rule_descr, rule_end) != NULL ) //We check if we have a OR in this group  A / B is yes but A ( A / B ) is no.
 	{
-		token_length = handle_or_rule(request, &tempory_list, rule_descr, rule_end, level, &next_pos);
+		token_length = handle_or_rule(request, &temp_list, rule_descr, rule_end, level, &next_pos);
 
 		is_valid = token_length != S_NOT_VALID;
 
@@ -105,41 +256,45 @@ int check_for_syntax(const char *request, linked_child **current_list, const cha
 		}else if ( *rule_descr == '%') {
 
 			if ( S_DEBUG_PATH ) printf("Path -> Number\n");
-			next_token_length = handle_terminal_number_rule( request, rule_descr, rule_end, &next_pos);
+			next_token_length = handle_terminal_number_rule( (unsigned char *)request, rule_descr, rule_end, &next_pos);
 			if ( S_DEBUG_PATH ) printf("Path <- Number : %d\n", next_token_length);
 
 		}else if ( *rule_descr == '*' || (*rule_descr >= '0' && *rule_descr <= '9' ) ) {
 				
 			if ( S_DEBUG_PATH ) printf("Path -> Repetition\n");
-			next_token_length = handle_repetition_rule( request, &tempory_list, rule_descr, rule_end, level, &next_pos);
+			next_token_length = handle_repetition_rule( request, &temp_list, rule_descr, rule_end, level, &next_pos);
 			if ( S_DEBUG_PATH ) printf("Path <- Repetition : %d\n", next_token_length);
 
 		}else if ( *rule_descr == '[') {
 			
 			if ( S_DEBUG_PATH ) printf("Path -> Option\n");
-			next_token_length = handle_optional_rule( request, &tempory_list,  rule_descr, rule_end, level, &next_pos);
+			next_token_length = handle_optional_rule( request, &temp_list,  rule_descr, rule_end, level, &next_pos);
 			if ( S_DEBUG_PATH ) printf("Path <- Option : %d\n", next_token_length);
 
 		}else if ( *rule_descr == '(') {
 
 			if ( S_DEBUG_PATH ) printf("Path -> Group\n");
-			next_token_length = handle_group_rule( request, &tempory_list, rule_descr, rule_end, level, &next_pos);
+			next_token_length = handle_group_rule( request, &temp_list, rule_descr, rule_end, level, &next_pos);
 			if ( S_DEBUG_PATH ) printf("Path <- Group : %d\n", next_token_length);
 
-		}else if ( *rule_descr != '\0'){ 
+		}else if ( *rule_descr == '$') {
+			if ( S_DEBUG_PATH ) printf("Path -> Message Body\n");
+			next_token_length = handle_body_rule( request, &next_pos);
+			if ( S_DEBUG_PATH ) printf("Path <- Message Body : %d\n", next_token_length);
+		}else if ( *rule_descr != '\0' && rule_descr != rule_end){ 
 			
 			if ( S_DEBUG_PATH ) printf("Path -> Embedeed\n");
 			int length = get_end_rule( rule_descr, rule_end) - rule_descr + 1;  //We Get the length of the name of the embedeed Rule.
 			abnf_rule *new_rule = get_abnf_rule( rule_descr, length); //We get the new abnf rule.
 
 			current_node = create_tree_node(new_rule->name, request, 0, level + 1);
-
+			//The only part where we create a new node
 			next_token_length = check_for_syntax( request, &(current_node->children), new_rule->description, NULL, level + 1);
 
 			if (next_token_length != S_NOT_VALID){
 			 	next_pos = get_next_rule(rule_descr, rule_end);
 				current_node->value_length = next_token_length;
-				add_child_to_list(&tempory_list, current_node);
+				add_child_to_list(&temp_list, current_node);
 			} 
 			else {
 				purge_tree_node(current_node);
@@ -160,17 +315,33 @@ int check_for_syntax(const char *request, linked_child **current_list, const cha
 	
 	if ( is_valid == 0 )
 	{
-		purge_linked_children(&tempory_list);
+		purge_linked_children(&temp_list); //We delete all the nodes
 		if ( S_DEBUG_TOKEN ) printf("[%d] Token (%d)\n", level, S_NOT_VALID);
 		return S_NOT_VALID;
 	}
 	else
 	{	
-		add_list_to_list(current_list, tempory_list);
+		add_list_to_list(current_list, temp_list); //We add all the nodes
 		if ( S_DEBUG_TOKEN ) printf("[%d] Token (%d)\n", level, token_length);
 		return token_length;
 	}
 	
+}
+
+int handle_body_rule(const char *request, char **next_srt){
+	int i = 0;
+	
+	if ( request != NULL)
+	{
+		while ( *(request + i) != '\0') i++;
+	}
+
+	if ( i > 0)
+	{
+		next_srt = NULL;
+	}
+	
+	return i > 0 ? i : S_NOT_VALID;
 }
 
 abnf_rule *get_abnf_rule(const char *name, int name_length){
@@ -271,19 +442,19 @@ char *get_end_or_group(const char *str, const char *str_end){
 	return (char *)str;
 }
 
-int handle_terminal_number_rule(const char *request, const char *rule, const char *rule_end, char **next_srt){
+int handle_terminal_number_rule(const unsigned char *request, const char *rule, const char *rule_end, char **next_srt){
 
 	char *s_str = get_start_rule(rule, rule_end); //rule is on % so we go to the number
 	int token_length = 0;
 
-	char val = (char)strtol(s_str, NULL, 16);
+	unsigned char val = (unsigned char)strtol(s_str, NULL, 16);
 
 	char *rule_dash = cs_strchr(s_str, '-', rule_end);
 	char *rule_point = cs_strchr(s_str, '.', rule_end);
-
+	
 	if ( rule_dash != NULL) /* Case of %xxx-xx */
 	{
-		char val_2 = (char)strtol(rule_dash + 1, NULL, 16);
+		unsigned char val_2 = (unsigned char)strtol(rule_dash + 1, NULL, 16);
 		if (*request >= val && *request <= val_2) token_length ++;	
 	}
 	else if ( rule_point != NULL) /* Case of %xxx.xx.xx.xx */
@@ -294,7 +465,7 @@ int handle_terminal_number_rule(const char *request, const char *rule, const cha
 
 			while ( rule_point != NULL && token_length > 0)
 			{
-				val = (char)strtol(++rule_point, NULL, 16);
+				val = (unsigned char)strtol(++rule_point, NULL, 16);
 				
 
 				token_length = (val == *request) ? token_length + 1 : 0;
@@ -359,7 +530,6 @@ int handle_or_rule(const char *request, linked_child **current_list, const char 
 		if (!is_valid)
 		{	
 			purge_linked_children(&list);
-			linked_child *list = NULL;
 			if ( or_pos == NULL) rule = NULL;
 			else{
 		    	rule = get_next_rule(or_pos + 1, rule_end);
@@ -367,7 +537,7 @@ int handle_or_rule(const char *request, linked_child **current_list, const char 
 			}
 		}
 	}
-	add_list_to_list(current_list,list);
+	add_list_to_list(current_list, list);
 	return token_length;
 }
 
@@ -397,17 +567,12 @@ int handle_repetition_rule(const char *request, linked_child **current_list, con
 	return token_length;
 }
 
-
-//  TODO 
-//  Handle ... *A A ...
 int handle_repetition(const char *request, linked_child **current_list, const char *rule, const char *rule_end, int min, int max, int level){
 	int n = 0;
 	int token_length = 0;
 	int next_token_length = 0;
 	while ( n <= max && next_token_length != S_NOT_VALID)
 	{	
-
-
 		next_token_length = check_for_syntax(request, current_list, rule, rule_end, level);
 		
 		if ( next_token_length != S_NOT_VALID )
@@ -421,9 +586,6 @@ int handle_repetition(const char *request, linked_child **current_list, const ch
 	return (n >= min && n <= max) ? token_length :  S_NOT_VALID;
 }
 
-
-// TODO
-// Handle Optional at the end
 int handle_optional_rule(const char *request, linked_child **current_list, const char *rule, const char *rule_end, int level, char **next_srt){
 	char *s_str = get_start_rule(rule, rule_end);
     char *e_str = get_end_rule(rule, rule_end);
@@ -468,14 +630,6 @@ static abnf_rule rules[] = {
 	{"SP","%x20 "},
 	{"DQUOTE","%x22 "},
 	{"WSP","SP / HTAB "},
-	// TEST ABNF
-	{"nombre","1*DIGIT "},
-	{"ponct","\",\" / \".\" / \"!\" / \"?\" / \":\" "},
-	{"separateur","SP / HTAB / \"-\" / \"_\" "},
-	{"debut","\"start\" "},
-	{"fin","\"fin\" "},
-	{"mot","1*ALPHA separateur "},
-	{"message","debut 2*(mot ponct / nombre separateur) [ponct] fin LF "},
 	// HTTP ABNF
 	{"URI","scheme \":\" hier-part [\"?\" query] [\"#\" fragment] "},
 	{"hier-part","\"//\" authority path-abempty / path-absolute / path-rootless / path-empty "},
@@ -490,11 +644,11 @@ static abnf_rule rules[] = {
 	{"port","*DIGIT "},
 	{"IP-literal","\"[\" (IPv6address / IPvFuture) \"]\" "},
 	{"IPvFuture","\"v\" 1*HEXDIG \".\" 1*(unreserved / sub-delims / \":\") "},
-	{"IPv6address","6 (h16 \":\") ls32 / \"::\" 5 (h16 \":\") ls32 / [h16] \"::\" 4 (h16 \":\") ls32 / [h16 *1 (\":\" h16)] \"::\" 3 (h16 \":\") ls32 / [h16 *2 (\":\" h16)] \"::\" 2 (h16 \":\") ls32 / [h16 *3 (\":\" h16)] \"::\" h16 \":\" ls32 / [h16 *4 (\":\" h16)] \"::\" ls32 / [h16 *5 (\":\" h16)] \"::\" h16 / [h16 *6 (\":\" h16)] \"::\" "},
-	{"h16","1*4 HEXDIG "},
+	{"IPv6address","6(h16 \":\") ls32 / \"::\" 5(h16 \":\") ls32 / [h16] \"::\" 4(h16 \":\") ls32 / [h16 *1(\":\" h16)] \"::\" 3(h16 \":\") ls32 / [h16 *2(\":\" h16)] \"::\" 2(h16 \":\") ls32 / [h16 *3(\":\" h16)] \"::\" h16 \":\" ls32 / [h16 *4(\":\" h16)] \"::\" ls32 / [h16 *5(\":\" h16)] \"::\" h16 / [h16 *6(\":\" h16)] \"::\" "},
+	{"h16","1*4HEXDIG "},
 	{"ls32","(h16 \":\" h16) / IPv4address "},
 	{"IPv4address","dec-octet \".\" dec-octet \".\" dec-octet \".\" dec-octet "},
-	{"dec-octet","\"25\" %x30-35 / \"2\" %x30-34 DIGIT / \"1\" 2 DIGIT / %x31-39 DIGIT / DIGIT "},
+	{"dec-octet","\"25\" %x30-35 / \"2\" %x30-34 DIGIT / \"1\" 2DIGIT / %x31-39 DIGIT / DIGIT "},
 	{"reg-name","*(unreserved / pct-encoded / sub-delims) "},
 	{"path","path-abempty / path-absolute / path-noscheme / path-rootless / path-empty "},
 	{"path-abempty","*(\"/\" segment) "},
@@ -513,18 +667,18 @@ static abnf_rule rules[] = {
 	{"reserved","gen-delims / sub-delims "},
 	{"gen-delims","\":\" / \"/\" / \"?\" / \"#\" / \"[\" / \"]\" / \"@\" "},
 	{"sub-delims","\"!\" / \"$\" / \"&\" / \"'\" / \"(\" / \")\" / \"*\" / \"+\" / \",\" / \";\" / \"=\" "},
-	{"language-range","(1*8 ALPHA *(\"-\" 1*8 alphanum)) / \"*\" "},
+	{"language-range","(1*8ALPHA *(\"-\" 1*8alphanum)) / \"*\" "},
 	{"alphanum","ALPHA / DIGIT "},
 	{"Language-Tag","langtag / privateuse / grandfathered "},
 	{"langtag","language [\"-\" script] [\"-\" region] *(\"-\" variant) *(\"-\" extension) [\"-\" privateuse] "},
-	{"language","2*3 ALPHA [\"-\" extlang] / 4 ALPHA / 5*8 ALPHA "},
-	{"extlang","3 ALPHA *2 (\"-\" 3 ALPHA) "},
-	{"script","4 ALPHA "},
-	{"region","2 ALPHA / 3 DIGIT "},
-	{"variant","5*8 alphanum / (DIGIT 3 alphanum) "},
-	{"extension","singleton 1*(\"-\" (2*8 alphanum)) "},
+	{"language","2*3ALPHA [\"-\" extlang] / 4ALPHA / 5*8ALPHA "},
+	{"extlang","3ALPHA *2(\"-\" 3ALPHA) "},
+	{"script","4ALPHA "},
+	{"region","2ALPHA / 3DIGIT "},
+	{"variant","5*8alphanum / (DIGIT 3alphanum) "},
+	{"extension","singleton 1*(\"-\" (2*8alphanum)) "},
 	{"singleton","DIGIT / %x41-57 / %x59-5A / %x61-77 / %x79-7A "},
-	{"privateuse","\"x\" 1*(\"-\" (1*8 alphanum)) "},
+	{"privateuse","\"x\" 1*(\"-\" (1*8alphanum)) "},
 	{"grandfathered","irregular / regular "},
 	{"irregular","\"en-GB-oed\" / \"i-ami\" / \"i-bnn\" / \"i-default\" / \"i-enochian\" / \"i-hak\" / \"i-klingon\" / \"i-lux\" / \"i-mingo\" / \"i-navajo\" / \"i-pwn\" / \"i-tao\" / \"i-tay\" / \"i-tsu\" / \"sgn-BE-FR\" / \"sgn-BE-NL\" / \"sgn-CH-DE\" "},
 	{"regular","\"art-lojban\" / \"cel-gaulish\" / \"no-bok\" / \"no-nyn\" / \"zh-guoyu\" / \"zh-hakka\" / \"zh-min\" / \"zh-min-nan\" / \"zh-xiang\" "},
@@ -563,7 +717,7 @@ static abnf_rule rules[] = {
 	{"http-URI","\"http://\" authority path-abempty [\"?\" query] [\"#\" fragment] "},
 	{"https-URI","\"https://\" authority path-abempty [\"?\" query] [\"#\" fragment] "},
 	{"last-chunk","1*\"0\" [chunk-ext] CRLF "},
-	{"message-body","*OCTET "},
+	{"message-body","$ "},
 	{"method","token "},
 	{"obs-fold","CRLF 1*(SP / HTAB) "},
 	{"obs-text","%x80-FF "},
@@ -576,14 +730,14 @@ static abnf_rule rules[] = {
 	{"qdtext","HTAB / SP / \"!\" / %x23-5B / %x5D-7E / obs-text "},
 	{"quoted-pair","\"\\\" (HTAB / SP / VCHAR / obs-text) "},
 	{"quoted-string","DQUOTE *(qdtext / quoted-pair) DQUOTE "},
-	{"rank","(\"0\" [\".\" *3 DIGIT]) / (\"1\" [\".\" *3 \"0\"]) "},
+	{"rank","(\"0\" [\".\" *3DIGIT]) / (\"1\" [\".\" *3\"0\"]) "},
 	{"reason-phrase","*(HTAB / SP / VCHAR / obs-text) "},
 	{"received-by","(uri-host [\":\" port]) / pseudonym "},
 	{"received-protocol","[protocol-name \"/\"] protocol-version "},
 	{"request-line","method SP request-target SP HTTP-version CRLF "},
 	{"request-target","origin-form "},
 	{"start-line","request-line / status-line "},
-	{"status-code","3 DIGIT "},
+	{"status-code","3DIGIT "},
 	{"status-line","HTTP-version SP status-code SP reason-phrase CRLF "},
 	{"t-codings","\"trailers\" / (transfer-coding [t-ranking]) "},
 	{"t-ranking","OWS \";\" OWS \"q=\" rank "},
@@ -622,29 +776,29 @@ static abnf_rule rules[] = {
 	{"codings","content-coding / \"identity\" / \"*\" "},
 	{"content-coding","token "},
 	{"date1","day SP month SP year "},
-	{"date2","day \"-\" month \"-\" 2 DIGIT "},
-	{"date3","month SP (2 DIGIT / (SP DIGIT)) "},
-	{"day","2 DIGIT "},
+	{"date2","day \"-\" month \"-\" 2DIGIT "},
+	{"date3","month SP (2DIGIT / (SP DIGIT)) "},
+	{"day","2DIGIT "},
 	{"day-name","%x4D.6F.6E / %x54.75.65 / %x57.65.64 / %x54.68.75 / %x46.72.69 / %x53.61.74 / %x53.75.6E "},
 	{"day-name-l","%x4D.6F.6E.64.61.79 / %x54.75.65.73.64.61.79 / %x57.65.64.6E.65.73.64.61.79 / %x54.68.75.72.73.64.61.79 / %x46.72.69.64.61.79 / %x53.61.74.75.72.64.61.79 / %x53.75.6E.64.61.79 "},
 	{"delay-seconds","1*DIGIT "},
-	{"hour","2 DIGIT "},
+	{"hour","2DIGIT "},
 	{"media-range","(\"*/*\" / (type \"/\" subtype) / (type \"/*\")) *(OWS \";\" OWS parameter) "},
 	{"media-type","type \"/\" subtype *(OWS \";\" OWS parameter) "},
-	{"minute","2 DIGIT "},
+	{"minute","2DIGIT "},
 	{"month","%x4A.61.6E / %x46.65.62 / %x4D.61.72 / %x41.70.72 / %x4D.61.79 / %x4A.75.6E / %x4A.75.6C / %x41.75.67 / %x53.65.70 / %x4F.63.74 / %x4E.6F.76 / %x44.65.63 "},
 	{"obs-date","rfc850-date / asctime-date "},
 	{"parameter","token \"=\" (token / quoted-string) "},
 	{"product","token [\"/\" product-version] "},
 	{"product-version","token "},
-	{"qvalue","(\"0\" [\".\" *3 DIGIT]) / (\"1\" [\".\" *3 \"0\"]) "},
+	{"qvalue","(\"0\" [\".\" *3DIGIT]) / (\"1\" [\".\" *3\"0\"]) "},
 	{"rfc850-date","day-name-l \",\" SP date2 SP time-of-day SP GMT "},
-	{"second","2 DIGIT "},
+	{"second","2DIGIT "},
 	{"subtype","token "},
 	{"time-of-day","hour \":\" minute \":\" second "},
 	{"type","token "},
 	{"weight","OWS \";\" OWS \"q=\" qvalue "},
-	{"year","4 DIGIT "},
+	{"year","4DIGIT "},
 	{"ETag","entity-tag "},
 	{"If-Match","\"*\" / (*(\",\" OWS) entity-tag *(OWS \",\" [OWS entity-tag])) "},
 	{"If-Modified-Since","HTTP-date "},
@@ -689,7 +843,7 @@ static abnf_rule rules[] = {
 	{"extension-pragma","token [\"=\" (token / quoted-string)] "},
 	{"pragma-directive","\"no-cache\" / extension-pragma "},
 	{"warn-agent","(uri-host [\":\" port]) / pseudonym "},
-	{"warn-code","3 DIGIT "},
+	{"warn-code","3DIGIT "},
 	{"warn-date","DQUOTE HTTP-date DQUOTE "},
 	{"warn-text","quoted-string "},
 	{"warning-value","warn-code SP warn-agent SP warn-text [SP warn-date] "},
@@ -742,7 +896,6 @@ static abnf_rule rules[] = {
 	{"cookie-octet","%x21 / %x23-2B / %x2D-3A / %x3C-5B / %x5D-7E "},
 	{"Cookie-header","\"Cookie:\" OWS cookie-string OWS "},
 	{"cookie-string","cookie-pair *(\";\" SP cookie-pair) "},
-	{"header-field","Connection-header / Content-Length-header / Content-Type-header / Cookie-header / Transfer-Encoding-header / Expect-header / Host-header / (field-name \":\" OWS field-value OWS) "},
-	{NULL,NULL}
+	{"header-field","Connection-header / Content-Length-header / Referer-header / Content-Type-header / Cookie-header / Transfer-Encoding-header / Expect-header / Host-header / Accept-header / Accept-Language-header / Accept-Charset-header / Accept-Encoding-header / (field-name \":\" OWS field-value OWS) "},	{NULL,NULL}
 }; /**< All abnf rules*/
 

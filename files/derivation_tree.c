@@ -1,3 +1,14 @@
+/**
+ * @file derivation_tree.c
+ * @author BENJAMIN ROBERT | MANDON ANAEL | PEDER LEO
+ * @brief Functions who handle the creation and deletion of the derivation_tree
+ * @version 1
+ * @date 2022-03-30
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
+
 /* System Includes */
 
 #include <stdlib.h> //Malloc
@@ -11,12 +22,11 @@
 
 #define T_DEBUG 0
 
-/* Declaration */
-
 /* Definition */
 
 derivation_tree *create_tree_node(const char *tag,const char *value, int value_length, int tree_level){
 	derivation_tree *node = (derivation_tree *)malloc( sizeof(derivation_tree) );
+	
 	node->tag = tag;
 	node->value = value;
 	node->value_length = value_length;

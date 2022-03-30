@@ -15,7 +15,7 @@
 
 int main(int argc,char *argv[])
 {
-	int res,i,fi;
+	int res,fi;
 	char *p=NULL,*addr;
     struct stat st;
 
@@ -35,11 +35,6 @@ int main(int argc,char *argv[])
 	if (argc == 3 ) { 
 		p=argv[2]; 	
 		printf("searching for %s\n",p); 
-		while (*p) { 
-			if (*p=='-') { *p='_'; }
-			p++; 
-		}
-		p=argv[2]; 	
 	}
 	// call parser and get results. 
 	if (res=parseur(addr,st.st_size)) {
@@ -59,6 +54,12 @@ int main(int argc,char *argv[])
 		purgeElement(&r);
 		purgeTree(root);
 	}
+
+	if ( res == 0)
+	{
+		printf("Error on : %s\n", argv[1]);
+	}
+	
 	close(fi);
 	return(res); 
 }
