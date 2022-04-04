@@ -7,15 +7,15 @@
 #include <sys/mman.h>
 #include <fcntl.h>
 #include <errno.h>
-
 #include "api.h" 
+#include "derivation_tree.h"
 
 #define false 0 
 
 
 int main(int argc,char *argv[])
 {
-	int res,i,fi;
+	int res,fi;
 	char *p=NULL,*addr;
     struct stat st;
 
@@ -31,18 +31,14 @@ int main(int argc,char *argv[])
                 return false;
 
 	// This is a special HACK since identificateur in C can't have character '-'
-
+	
 	if (argc == 3 ) { 
 		p=argv[2]; 	
 		printf("searching for %s\n",p); 
-		while (*p) { 
-			if (*p=='-') { *p='_'; }
-			p++; 
-		}
-		p=argv[2]; 	
 	}
 	// call parser and get results. 
 	if (res=parseur(addr,st.st_size)) {
+		printf("Sucess !\n");
 		_Token *r,*tok; 
 		void *root=NULL;
 		root=getRootTree(); 
@@ -58,6 +54,12 @@ int main(int argc,char *argv[])
 		purgeElement(&r);
 		purgeTree(root);
 	}
+
+	if ( res == 0)
+	{
+		printf("Error on : %s\n", argv[1]);
+	}
+	
 	close(fi);
 	return(res); 
 }

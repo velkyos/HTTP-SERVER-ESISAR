@@ -56,3 +56,5 @@ documents/
 documentation/
 http-parser
 .vscode/settings.json
+*.txt
+httpparser
