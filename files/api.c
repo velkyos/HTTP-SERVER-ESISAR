@@ -5,29 +5,26 @@
 
 #include "syntax_check.h"
 
+#define NOT_VALID -1
 
 void recursif_search_tree(derivation_tree *start, char *name, _Token *list);
 void add_token_to_list(_Token *list, derivation_tree *node);
 
 
-//L'adresse du Root;
 derivation_tree *root = NULL;
 
 int parseur(char *req, int len){
-	root = create_tree_node("HTTP-message",req,len,0);
-	linked_child *root_list = NULL;
-	abnf_rule *rule = get_abnf_rule("HTTP-message", 12);
+	root = create_tree_node("HTTP-message",req,len,0); 
+	abnf_rule *rule = get_abnf_rule("HTTP-message", 12); 
 
-	int n = check_for_syntax(req, &root_list, rule->description, NULL, 0);
+	int n = check_for_syntax(req, &root->children, rule->description, NULL, 0);
 
-	root->children = root_list;
+	//We take care of the message-body, we add the remaining part of the request.
+	//If the request didn't have a message-body, we put -1 in value_length (The searchTree function will not get this node).
+	derivation_tree *body = (derivation_tree *)searchTree(root, "message-body")->node;
+	body->value_length = (n != NOT_VALID && len - n != 0) ? len - n : NOT_VALID;
 
-	if ( n == len ) {
-		return n;
-	}
-	else {
-		return 0;
-	}
+	return (n != NOT_VALID) ? n : 0;
 }
 
 void *getRootTree(){
@@ -43,7 +40,7 @@ _Token *searchTree(void *start,char *name){
 	if ( start == NULL ) start_node = root;
 	else start_node = (derivation_tree *)start;
 
-	if ( strcmp (start_node->tag , name) == 0) list->node = start_node;
+	if ( strcmp (start_node->tag , name) == 0 && start_node->value_length != NOT_VALID) list->node = start_node;
 	else recursif_search_tree( start_node, name, list);
 	if (list->node == NULL && list->next == NULL)
 	{
@@ -102,7 +99,7 @@ void recursif_search_tree(derivation_tree *start, char *name, _Token *list){
 	{
 		ptr_node = ptr_child->node;
 		ptr_child = ptr_child->next;
-		if ( strcmp (ptr_node->tag , name) == 0)
+		if ( strcmp (ptr_node->tag , name) == 0  && ptr_node->value_length != NOT_VALID)
 		{
 			if ( list->node == NULL) list->node = ptr_node;
 			else add_token_to_list(list, ptr_node);

@@ -2,7 +2,7 @@
  * @file syntax_check.c
  * @author BENJAMIN ROBERT | MANDON ANAEL | PEDER LEO
  * @brief Syntax check of HTTP request.
- * @version 0.95
+ * @version 1
  * @date 2022-03-30
  * 
  * @copyright Copyright (c) 2022
@@ -32,6 +32,7 @@
 #define S_NOT_VALID -1
 #define MAX_INT 2147483647
 
+#pragma region Declaration
 /* Declaration */
 
 static abnf_rule rules[];
@@ -209,14 +210,7 @@ int handle_repetition(const char *request, linked_child **current_list, const ch
  */
 int handle_group_rule(const char *request, linked_child **current_list, const char *rule, const char *rule_end, int level, char **next_srt);
 
-/**
- * @brief Handle the message-body Rule
- * 
- * @param request The pointer to the request.
- * @param next_srt The next pointer for the rule. NULL if there is a message body
- * @return The char length of the message-body. 
- */
-int handle_body_rule(const char *request, char **next_srt);
+#pragma endregion Declaration
 
 /* Definition */
 
@@ -235,7 +229,6 @@ int check_for_syntax(const char *request, linked_child **current_list, const cha
 		token_length = handle_or_rule(request, &temp_list, rule_descr, rule_end, level, &next_pos);
 
 		is_valid = token_length != S_NOT_VALID;
-
 		rule_descr = next_pos;
 	}
 	while (reach_str_end(rule_descr, rule_end) == 0)
@@ -278,9 +271,11 @@ int check_for_syntax(const char *request, linked_child **current_list, const cha
 			if ( S_DEBUG_PATH ) printf("Path <- Group : %d\n", next_token_length);
 
 		}else if ( *rule_descr == '$') {
+
 			if ( S_DEBUG_PATH ) printf("Path -> Message Body\n");
-			next_token_length = handle_body_rule( request, &next_pos);
+			next_token_length = 0;
 			if ( S_DEBUG_PATH ) printf("Path <- Message Body : %d\n", next_token_length);
+
 		}else if ( *rule_descr != '\0' && rule_descr != rule_end){ 
 			
 			if ( S_DEBUG_PATH ) printf("Path -> Embedeed\n");
@@ -310,7 +305,7 @@ int check_for_syntax(const char *request, linked_child **current_list, const cha
 			token_length += next_token_length;
 			request += next_token_length;
 		}
-		rule_descr = next_pos;  // Is NULL if we got an error so we stop
+		rule_descr = next_pos;  // Is NULL we reach the end of the request or an Error
 	}
 	
 	if ( is_valid == 0 )
@@ -326,22 +321,6 @@ int check_for_syntax(const char *request, linked_child **current_list, const cha
 		return token_length;
 	}
 	
-}
-
-int handle_body_rule(const char *request, char **next_srt){
-	int i = 0;
-	
-	if ( request != NULL)
-	{
-		while ( *(request + i) != '\0') i++;
-	}
-
-	if ( i > 0)
-	{
-		next_srt = NULL;
-	}
-	
-	return i > 0 ? i : S_NOT_VALID;
 }
 
 abnf_rule *get_abnf_rule(const char *name, int name_length){
@@ -568,10 +547,11 @@ int handle_repetition_rule(const char *request, linked_child **current_list, con
 }
 
 int handle_repetition(const char *request, linked_child **current_list, const char *rule, const char *rule_end, int min, int max, int level){
+
 	int n = 0;
 	int token_length = 0;
 	int next_token_length = 0;
-	while ( n <= max && next_token_length != S_NOT_VALID)
+	while ( n < max && next_token_length != S_NOT_VALID)
 	{	
 		next_token_length = check_for_syntax(request, current_list, rule, rule_end, level);
 		
@@ -582,7 +562,7 @@ int handle_repetition(const char *request, linked_child **current_list, const ch
 			request += next_token_length;
 		}
 	}
-	
+
 	return (n >= min && n <= max) ? token_length :  S_NOT_VALID;
 }
 
@@ -608,7 +588,6 @@ int handle_group_rule(const char *request, linked_child **current_list, const ch
 
 	return token_length;
 }
-
 
 /* Abnf_rules */
 
@@ -896,6 +875,6 @@ static abnf_rule rules[] = {
 	{"cookie-octet","%x21 / %x23-2B / %x2D-3A / %x3C-5B / %x5D-7E "},
 	{"Cookie-header","\"Cookie:\" OWS cookie-string OWS "},
 	{"cookie-string","cookie-pair *(\";\" SP cookie-pair) "},
-	{"header-field","Connection-header / Content-Length-header / Referer-header / Content-Type-header / Cookie-header / Transfer-Encoding-header / Expect-header / Host-header / Accept-header / Accept-Language-header / Accept-Charset-header / Accept-Encoding-header / (field-name \":\" OWS field-value OWS) "},	{NULL,NULL}
+	{"header-field","Connection-header / Content-Length-header / Referer-header / Content-Type-header / Cookie-header / Transfer-Encoding-header / Expect-header / Host-header / Accept-header / Accept-Language-header / User-Agent-header / Accept-Charset-header / Accept-Encoding-header / (field-name \":\" OWS field-value OWS) "},	{NULL,NULL}
 }; /**< All abnf rules*/
 
