@@ -21,9 +21,11 @@ int parseur(char *req, int len){
 
 	//We take care of the message-body, we add the remaining part of the request.
 	//If the request didn't have a message-body, we put -1 in value_length (The searchTree function will not get this node).
-	derivation_tree *body = (derivation_tree *)searchTree(root, "message-body")->node;
-	body->value_length = (n != NOT_VALID && len - n != 0) ? len - n : NOT_VALID;
-
+	if (n != NOT_VALID ) 
+	{
+		derivation_tree *body = (derivation_tree *)searchTree(root, "message-body")->node;
+		body->value_length = (n != NOT_VALID && len - n != 0) ? len - n : NOT_VALID;
+	}
 	return (n != NOT_VALID) ? n : 0;
 }
 
