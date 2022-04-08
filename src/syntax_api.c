@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include "api.h"
+#include "syntax_api.h"
 
 #include "syntax_check.h"
 

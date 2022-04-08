@@ -1,7 +1,7 @@
-FILEDIR = files
-OBJDIR = files/obj
+FILEDIR = src
+OBJDIR = bin
 
-BIN = http-parser
+BIN = http-server
 CC = gcc
 FLAGS = -Wall
 

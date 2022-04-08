@@ -7,8 +7,7 @@
 #include <sys/mman.h>
 #include <fcntl.h>
 #include <errno.h>
-#include "api.h" 
-#include "derivation_tree.h"
+#include "syntax_api.h" 
 
 #define false 0 
 

@@ -53,8 +53,8 @@ dkms.conf
 
 #Other
 documents/
-documentation/
-http-parser
+html_doc/
+http-server
 .vscode/settings.json
 *.txt
 httpparser
