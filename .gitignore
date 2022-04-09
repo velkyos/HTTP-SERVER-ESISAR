@@ -53,7 +53,7 @@ dkms.conf
 
 #Other
 documents/
-html_doc/
+doc_html/
 http-server
 .vscode/settings.json
 *.txt

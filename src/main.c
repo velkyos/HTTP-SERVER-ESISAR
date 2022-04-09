@@ -21,10 +21,12 @@
 #include "answer_api.h"
 #include "derivation_tree.h"
 #include "request.h"
+#include "config.h"
 
 /* Constants */
 
-#define false 0 
+#define false 0
+#define PORT 8080
 
 /* Declaration */
 
@@ -40,12 +42,15 @@ int main(int argc, char const *argv[])
 {
 	message *answer = NULL;
 	message *request = NULL;
+	Config_server *config = NULL;
+	int n = 0;
+	config = get_config("server.ini");
 
-	while (1)
+	while (config && config->maxcycle > 0 && n < config->maxcycle)
 	{
-		printf("Server is Listening ..\n");
+		printf("Server is Listening on %d ..\n", config->port);
 
-		request = getRequest(8080);
+		request = getRequest(config->port);
 
 		if ( request == NULL)
 		{	
@@ -58,14 +63,20 @@ int main(int argc, char const *argv[])
 		printf("Request content :\n%.*s\n\n",request->len,request->buf);  
 
 		answer = get_answer(request);
-		if( answer ) sendReponse(answer);
+		if( answer ) {
+			writeDirectClient(answer->clientId, answer->buf, answer->len);
+			endWriteDirectClient(answer->clientId);
+		}
 
 		requestShutdownSocket(answer->clientId);
 
-		free(request);
+		freeRequest(request);
 		free(answer);
-
+		n++;
 	}
+	
+	free_config(config);
+	printf("Server is closing ..\n");
 	return 0;
 }
 
@@ -73,7 +84,7 @@ message *get_answer(message *request){
 	message *answer = malloc(sizeof(message));
 
 	if (answer){
-		int res_parser = parser(request->buf, request->len);
+		int res_parser = 1;//parser(request->buf, request->len);
 
 		if (res_parser ) {
 			answer->buf= ok_message;
