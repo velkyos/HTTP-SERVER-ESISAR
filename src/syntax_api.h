@@ -25,7 +25,7 @@ char *getElementValue(void *node,int *len);
 void purgeElement(_Token **r); 
 
 // Fonction qui supprime et libere toute la mémoire associée à l'arbre . 
-void purgeTree(void *root); 
+void purgeTree(void *tree); 
 
 // L'appel à votre parser un char* et une longueur à parser.  
 int parser(char *req, int len); 

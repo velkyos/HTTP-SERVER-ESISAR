@@ -24,6 +24,8 @@
 
 /* Definition */
 
+int finishPrint = 0;
+
 derivation_tree *create_tree_node(const char *tag,const char *value, int value_length, int tree_level){
 	derivation_tree *node = (derivation_tree *)malloc( sizeof(derivation_tree) );
 	
@@ -91,3 +93,30 @@ void purge_tree_node(derivation_tree *node){
 	free(node);
 	return;
 }
+
+void print_tree(FILE *output, derivation_tree *tree){
+	if (tree->tree_level == 0) finishPrint = 0;
+	if (tree->tree_level < 3) {
+		linked_child *list = tree->children;
+		int n = tree->tree_level;
+
+		while ( n-- > 0) fprintf(output,"|  ");
+
+		fprintf(output,"|---%s", tree->tag);
+
+		if (tree->tree_level > 0) fprintf(output, " %.*s\n", tree->value_length, tree->value);
+		else fprintf(output, "\n");
+
+		while ( list != NULL)
+		{
+			print_tree(output, list->node);
+			list = list->next;
+		}
+		if (tree->tree_level == 0) finishPrint = 1;
+	}
+}
+
+int getstatus(){
+	return finishPrint;
+}
+

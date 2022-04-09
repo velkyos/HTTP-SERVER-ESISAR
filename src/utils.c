@@ -10,7 +10,6 @@
  */
 
 #include "utils.h"
-#include <stdio.h> 
 #include <stdlib.h> 
 #include <sys/stat.h>
 #include <unistd.h>
@@ -19,7 +18,7 @@
 #include <sys/mman.h>
 
 
-char *open_file(char *name, int *len){
+char *read_file(char *name, int *len){
     char *addr;
     int file;
     struct stat st;
@@ -41,4 +40,13 @@ char *open_file(char *name, int *len){
     close(file);
     
     return addr;
+}
+
+FILE *open_file(char *name, char *option){
+    FILE* file = fopen(name, option);
+	if (file == NULL){
+		printf("Error while opening %s\n", name);
+		exit(-1);
+	}
+	return file;
 }

@@ -22,18 +22,19 @@
 #include "derivation_tree.h"
 #include "request.h"
 #include "config.h"
+#include "utils.h"
 
 /* Constants */
 
 #define false 0
-#define PORT 8080
+#define M_PRINT_TREE 1
 
 /* Declaration */
 
 char error_message[] = "Code 400 : Bad Request\n";
 char ok_message[] = "Code 200 : OK\n";
 
-message *get_answer(message* request);
+message *get_answer(message* request, int index);
 
 
 /* Definition */
@@ -57,12 +58,12 @@ int main(int argc, char const *argv[])
 			printf("Request Error : EXIT !\n");
 			exit(EXIT_FAILURE);
 		}
-		
+
 		printf("-> Request received from client %d\n", request->clientId);
 		printf("Client [%d] [%s:%d]\n",request->clientId,inet_ntoa(request->clientAddress->sin_addr),htons(request->clientAddress->sin_port));
 		printf("Request content :\n%.*s\n\n",request->len,request->buf);  
 
-		answer = get_answer(request);
+		answer = get_answer(request, n);
 		if( answer ) {
 			writeDirectClient(answer->clientId, answer->buf, answer->len);
 			endWriteDirectClient(answer->clientId);
@@ -74,17 +75,24 @@ int main(int argc, char const *argv[])
 		free(answer);
 		n++;
 	}
-	
+
 	free_config(config);
 	printf("Server is closing ..\n");
 	return 0;
 }
 
-message *get_answer(message *request){
+message *get_answer(message *request, int index){
 	message *answer = malloc(sizeof(message));
 
 	if (answer){
-		int res_parser = 1;//parser(request->buf, request->len);
+		int res_parser = parser(request->buf, request->len);
+
+		if ( M_PRINT_TREE ) {
+			char name[50];
+			sprintf(name,"output%d.log",index);
+			FILE *file = open_file(name,"w");
+			print_tree(file, getRootTree());
+		}
 
 		if (res_parser ) {
 			answer->buf= ok_message;
@@ -95,6 +103,8 @@ message *get_answer(message *request){
 			answer->len= strlen(error_message); 
 		}
 		answer->clientId = request->clientId;
+
+		purgeTree(getRootTree());
 	}
 	return answer;
 }

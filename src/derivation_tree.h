@@ -75,4 +75,13 @@
 	 */
 	void purge_linked_children(linked_child **main_list);
 
+	/**
+	 * @brief Print the tree to a file
+	 * @param output File or STD_OUT
+	 * @param tree Pointer to the tree you want to display
+	 */
+	void print_tree(FILE *output, derivation_tree *tree);
+
+	int getstatus();
+
 #endif

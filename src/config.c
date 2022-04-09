@@ -52,7 +52,7 @@ char *find_section(char *start, char *name, char **end);
 Config_server *get_config(char *file_name){
     Config_server *config = malloc(sizeof(Config_server));
 
-    char *file = open_file(file_name, NULL);
+    char *file = read_file(file_name, NULL);
 
     char *end, *ptr;
 

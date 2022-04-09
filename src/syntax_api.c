@@ -13,18 +13,22 @@ void add_token_to_list(_Token *list, derivation_tree *node);
 
 derivation_tree *root = NULL;
 
+
 int parser(char *req, int len){
 	root = create_tree_node("HTTP-message",req,len,0); 
 	abnf_rule *rule = get_abnf_rule("HTTP-message", 12); 
 
-	int n = check_for_syntax(req, &root->children, rule->description, NULL, 0);
+	int n = check_for_syntax(req, &root->children, rule->description, NULL, 1);
 
 	//We take care of the message-body, we add the remaining part of the request.
 	//If the request didn't have a message-body, we put -1 in value_length (The searchTree function will not get this node).
 	if (n != NOT_VALID ) 
 	{
-		derivation_tree *body = (derivation_tree *)searchTree(root, "message-body")->node;
+		_Token *t = searchTree(root, "message-body");
+		derivation_tree *body = (derivation_tree *)t->node;
 		body->value_length = (n != NOT_VALID && len - n != 0) ? len - n : NOT_VALID;
+		printf("Message Body : %s\n", body->value);
+		purgeElement(&t);
 	}
 	return (n != NOT_VALID) ? n : 0;
 }
@@ -85,7 +89,7 @@ void purgeElement(_Token **r){
 
 }
 
-void purgeTree(void *root){
+void purgeTree(void *tree){
 	purge_tree_node(root);
 	root = NULL;
 } 
