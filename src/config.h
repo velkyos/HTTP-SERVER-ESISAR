@@ -20,6 +20,8 @@
     
     void free_config(Config_server *config);
 
+    void generate_config_file();
+
 #endif
 
 

@@ -21,10 +21,9 @@
 /* Constants */
 
 #define T_DEBUG 0
+#define T_MAX_LEVEL 3
 
 /* Definition */
-
-int finishPrint = 0;
 
 derivation_tree *create_tree_node(const char *tag,const char *value, int value_length, int tree_level){
 	derivation_tree *node = (derivation_tree *)malloc( sizeof(derivation_tree) );
@@ -95,8 +94,7 @@ void purge_tree_node(derivation_tree *node){
 }
 
 void print_tree(FILE *output, derivation_tree *tree){
-	if (tree->tree_level == 0) finishPrint = 0;
-	if (tree->tree_level < 3) {
+	if (tree->tree_level < T_MAX_LEVEL) {
 		linked_child *list = tree->children;
 		int n = tree->tree_level;
 
@@ -112,11 +110,6 @@ void print_tree(FILE *output, derivation_tree *tree){
 			print_tree(output, list->node);
 			list = list->next;
 		}
-		if (tree->tree_level == 0) finishPrint = 1;
 	}
-}
-
-int getstatus(){
-	return finishPrint;
 }
 

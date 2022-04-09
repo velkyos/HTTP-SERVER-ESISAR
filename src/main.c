@@ -27,7 +27,7 @@
 /* Constants */
 
 #define false 0
-#define M_PRINT_TREE 1
+#define M_PRINT_TREE 0
 
 /* Declaration */
 
@@ -47,7 +47,13 @@ int main(int argc, char const *argv[])
 	int n = 0;
 	config = get_config("server.ini");
 
-	while (config && config->maxcycle > 0 && n < config->maxcycle)
+	if ( config == NULL){
+		printf("Config file not found, stopping the server and generating a default one\n");
+		generate_config_file();
+		exit(EXIT_FAILURE);
+	}
+
+	while ( (config->maxcycle > 0 && n < config->maxcycle) || config->maxcycle == 0)
 	{
 		printf("Server is Listening on %d ..\n", config->port);
 
@@ -92,6 +98,7 @@ message *get_answer(message *request, int index){
 			sprintf(name,"output%d.log",index);
 			FILE *file = open_file(name,"w");
 			print_tree(file, getRootTree());
+			fclose(file);
 		}
 
 		if (res_parser ) {

@@ -82,6 +82,4 @@
 	 */
 	void print_tree(FILE *output, derivation_tree *tree);
 
-	int getstatus();
-
 #endif
