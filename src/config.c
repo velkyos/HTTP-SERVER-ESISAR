@@ -144,6 +144,6 @@ void free_config(Config_server *config){
 
 void generate_config_file(){
     FILE *file = open_file("server.ini","w");
-    fprintf(file,"[CONFIG]\nport=8080  #Listen Port\nhosts=1  #Numbers of host\nmaxcycle=0   #How many request you want to process before closing the server\n\n[HOST:0] #The number must start from 0 to hosts - 1\n name= #Name of the website\nroot= #root path (from http-server folder of absolute path)\nindex= #Default file to open if none is selected\n");
+    fprintf(file,"[CONFIG]\nport=8080  #Listen Port\nhosts=1  #Numbers of host\nmaxcycle=0   #How many request you want to process before closing the server\n\n[HOST:0] #The number must start from 0 to hosts - 1\nname= #Name of the website\nroot= #root path (from http-server folder of absolute path)\nindex= #Default file to open if none is selected\n");
     fclose(file);
 }

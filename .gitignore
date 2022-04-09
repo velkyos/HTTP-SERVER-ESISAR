@@ -58,3 +58,4 @@ http-server
 .vscode/settings.json
 *.txt
 httpparser
+server.ini
