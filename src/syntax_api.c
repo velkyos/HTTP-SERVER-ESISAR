@@ -13,7 +13,7 @@ void add_token_to_list(_Token *list, derivation_tree *node);
 
 derivation_tree *root = NULL;
 
-int parseur(char *req, int len){
+int parser(char *req, int len){
 	root = create_tree_node("HTTP-message",req,len,0); 
 	abnf_rule *rule = get_abnf_rule("HTTP-message", 12); 
 
