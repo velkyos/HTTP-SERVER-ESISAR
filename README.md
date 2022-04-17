@@ -1,5 +1,5 @@
 # HTTP SERVER
-#### _ MANDON ANAEL | PEDER LEOS | BENJAMIN ROBERT _
+#### _ MANDON ANAEL | PEDER LEO | ROBERT BENJAMIN _
 
 
  # Version 0.3
@@ -15,10 +15,11 @@
 
  ## Infos
 
- Source files are in src/*
+ Source files are in src/
 
  Binary files are in bin/
 
- An HTTP documentation can be generated with *`doxygen doxygen-config`*
 
+ An HTTP documentation can be open with *`make doc`*
+ 
 

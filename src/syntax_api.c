@@ -18,7 +18,7 @@ int parser(char *req, int len){
 	root = create_tree_node("HTTP-message",req,len,0); 
 	abnf_rule *rule = get_abnf_rule("HTTP-message", 12); 
 
-	int n = check_for_syntax(req, &root->children, rule->description, NULL, 1);
+	int n = check_for_syntax(req, &root->children, rule->description, NULL, 0);
 
 	//We take care of the message-body, we add the remaining part of the request.
 	//If the request didn't have a message-body, we put -1 in value_length (The searchTree function will not get this node).

@@ -27,7 +27,7 @@
 /* Constants */
 
 #define false 0
-#define M_PRINT_TREE 0
+#define M_PRINT_TREE 1
 
 /* Declaration */
 
@@ -95,7 +95,7 @@ message *get_answer(message *request, int index){
 
 		if ( M_PRINT_TREE ) {
 			char name[50];
-			sprintf(name,"output%d.log",index);
+			sprintf(name,"output_request_n_%d.log",index);
 			FILE *file = open_file(name,"w");
 			print_tree(file, getRootTree());
 			fclose(file);

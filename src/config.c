@@ -2,16 +2,17 @@
  * @file config.c
  * @author ROBERT Benjamin
  * @brief Process the config file.
- * @version 0.1
+ * @version 1.0
  * @date 2022-04-8
  * 
  * @copyright Copyright (c) 2022
  * 
- * Example du fichier config :
+ * Exemple du fichier config :
  * \code{.ini}
 [CONFIG]
 port=8080  #Port d'écoute
-hosts=3
+hosts=3    #Nombre de site
+maxcycle=0 #Nombre de fois que le serveur va répondre à une requête, 0 si infini
 
 [HOST:0]
 name=toto0.com
@@ -50,12 +51,20 @@ char *find_section(char *start, char *name, char **end);
 
 /* Definition */
 
+/**
+ * @brief Read the config file `file_name`, if not found return NULL
+ * @see Config_server
+ * @see Website
+ * 
+ * @param file_name 
+ * @return NULL or the pointer to the struct with all the config infos
+ */
 Config_server *get_config(char *file_name){
-    Config_server *config = malloc(sizeof(Config_server));
-
-    char *file = read_file(file_name, NULL);
+	char *file = read_file(file_name, NULL);
 
     if (file == NULL) return NULL;
+
+    Config_server *config = malloc(sizeof(Config_server));
 
     char *end, *ptr;
 

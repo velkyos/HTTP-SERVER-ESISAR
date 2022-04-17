@@ -1,13 +1,20 @@
 #ifndef CONFIG_H
     #define CONFIG_H
 
+	/**
+	 * @brief Contain Basic information about each virtual host.
+	 * 
+	 */
     typedef struct{
         char *name;
         char *root;
         char *index;
     }Website;
 
-
+	/**
+	 * @brief Contain all the information needed to start and close the http-server.
+	 * 
+	 */
     typedef struct{
         Website *websites;
         int port;

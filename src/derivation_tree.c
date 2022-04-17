@@ -102,7 +102,7 @@ void print_tree(FILE *output, derivation_tree *tree){
 
 		fprintf(output,"|---%s", tree->tag);
 
-		if (tree->tree_level > 0) fprintf(output, " %.*s\n", tree->value_length, tree->value);
+		if (tree->tree_level > 0) fprintf(output, " > %.*s\n", tree->value_length, tree->value);
 		else fprintf(output, "\n");
 
 		while ( list != NULL)
