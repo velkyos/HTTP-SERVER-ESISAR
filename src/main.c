@@ -1,8 +1,8 @@
 /* System Includes */
 
-#include <stdio.h> 
-#include <stdlib.h> 
-#include <string.h> 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -60,14 +60,15 @@ int main(int argc, char const *argv[])
 		request = getRequest(config->port);
 
 		if ( request == NULL)
-		{	
+		{
 			printf("Request Error : EXIT !\n");
 			exit(EXIT_FAILURE);
 		}
 
 		printf("-> Request received from client %d\n", request->clientId);
 		printf("Client [%d] [%s:%d]\n",request->clientId,inet_ntoa(request->clientAddress->sin_addr),htons(request->clientAddress->sin_port));
-		printf("Request content :\n%.*s\n\n",request->len,request->buf);  
+		printf("Request content :\n%.*s\n\n",request->len,request->buf);
+
 
 		answer = get_answer(request, n);
 		if( answer ) {
@@ -103,11 +104,12 @@ message *get_answer(message *request, int index){
 
 		if (res_parser ) {
 			answer->buf= ok_message;
-			answer->len= strlen(ok_message); 
+			answer->len= strlen(ok_message);
+			semantic(getRootTree()); //ICI
 		}
 		else {
 			answer->buf= error_message;
-			answer->len= strlen(error_message); 
+			answer->len= strlen(error_message);
 		}
 		answer->clientId = request->clientId;
 
@@ -131,7 +133,7 @@ message *get_answer(message *request, int index){
 //     struct stat st;
 
 // 	if (argc < 3 ) { printf("Usage: httpparser <file> <search>\nAttention <search> is case sensitive\n"); exit(1); }
-// 	/* ouverture du fichier contenant la requête */ 
+// 	/* ouverture du fichier contenant la requête */
 // 	if ((fi=open(argv[1],O_RDWR)) == -1) {
 //                 perror("open");
 //                 return false;
@@ -142,25 +144,25 @@ message *get_answer(message *request, int index){
 //                 return false;
 
 // 	// This is a special HACK since identificateur in C can't have character '-'
-	
-// 	if (argc == 3 ) { 
-// 		p=argv[2]; 	
-// 		printf("searching for %s\n",p); 
+
+// 	if (argc == 3 ) {
+// 		p=argv[2];
+// 		printf("searching for %s\n",p);
 // 	}
-// 	// call parser and get results. 
+// 	// call parser and get results.
 // 	if (res=parser(addr,st.st_size)) {
 // 		printf("Sucess !\n");
-// 		_Token *r,*tok; 
+// 		_Token *r,*tok;
 // 		void *root=NULL;
-// 		root=getRootTree(); 
-// 		r=searchTree(root,p); 
-// 		tok=r; 
+// 		root=getRootTree();
+// 		r=searchTree(root,p);
+// 		tok=r;
 // 		while (tok) {
-// 			int l; 
-// 			char *s; 
-// 			s=getElementValue(tok->node,&l); 
+// 			int l;
+// 			char *s;
+// 			s=getElementValue(tok->node,&l);
 // 			printf("FOUND [%.*s]\n",l,s);
-// 			tok=tok->next; 
+// 			tok=tok->next;
 // 		}
 // 		purgeElement(&r);
 // 		purgeTree(root);
@@ -170,7 +172,7 @@ message *get_answer(message *request, int index){
 // 	{
 // 		printf("Error on : %s\n", argv[1]);
 // 	}
-	
+
 // 	close(fi);
-// 	return(res); 
+// 	return(res);
 // }

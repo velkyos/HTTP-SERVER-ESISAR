@@ -15,14 +15,14 @@ derivation_tree *root = NULL;
 
 
 int parser(char *req, int len){
-	root = create_tree_node("HTTP-message",req,len,0); 
-	abnf_rule *rule = get_abnf_rule("HTTP-message", 12); 
+	root = create_tree_node("HTTP-message",req,len,0);
+	abnf_rule *rule = get_abnf_rule("HTTP-message", 12);
 
 	int n = check_for_syntax(req, &root->children, rule->description, NULL, 0);
 
 	//We take care of the message-body, we add the remaining part of the request.
 	//If the request didn't have a message-body, we put -1 in value_length (The searchTree function will not get this node).
-	if (n != NOT_VALID ) 
+	if (n != NOT_VALID )
 	{
 		_Token *t = searchTree(root, "message-body");
 		derivation_tree *body = (derivation_tree *)t->node;
@@ -51,7 +51,7 @@ _Token *searchTree(void *start,char *name){
 	if (list->node == NULL && list->next == NULL)
 	{
 		free(list);
-		printf("Didn't Find any %s !\n", name);
+		/*printf("Didn't Find any %s !\n", name);*/
 		return NULL;
 	}
 	return list;
@@ -92,14 +92,14 @@ void purgeElement(_Token **r){
 void purgeTree(void *tree){
 	purge_tree_node(root);
 	root = NULL;
-} 
+}
 
 
 void recursif_search_tree(derivation_tree *start, char *name, _Token *list){
-	
+
 	derivation_tree *ptr_node = start;
 	linked_child *ptr_child = NULL;
-	
+
 	ptr_child = ptr_node->children;
 	while (ptr_child != NULL)
 	{
