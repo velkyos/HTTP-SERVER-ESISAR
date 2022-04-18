@@ -56,6 +56,7 @@ dkms.conf
 .vscode/settings.json
 
 documents/
+doc_html/
 
 http-server
 server.ini
