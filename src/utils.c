@@ -4,13 +4,13 @@
  * @brief Utility functions.
  * @version 0.1
  * @date 2022-04-8
- * 
+ *
  * @copyright Copyright (c) 2022
- * 
+ *
  */
 
 #include "utils.h"
-#include <stdlib.h> 
+#include <stdlib.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -38,7 +38,7 @@ char *read_file(char *name, int *len){
     if (len) *len = st.st_size;
 
     close(file);
-    
+
     return addr;
 }
 
@@ -49,4 +49,23 @@ FILE *open_file(char *name, char *option){
 		exit(-1);
 	}
 	return file;
+}
+
+
+/*Compare deux chaine de caractères, le debut de la premiere chaine caractères est
+exatement la deuxieme
+Exemple: HTTP/1.1 suite_message et HTTP/1.1 est valide (resulat 1)
+         HTTP/1.1ddF suite_message et HTTP/1.1 n'est pas valide (resulat 0)
+         HTTP/1 suite_message et HTTP/1.1 n'est pas valide (resulat 0)
+*/
+int compare_string(char *chaine1, char *chaine2){
+  int res=1;
+  int i=0;
+  while(chaine1[i]>32 && chaine2[i]>32 && res){ // Les caractères ASCII inferieur 32 sont des caracteres vides (espace, \n...)
+    if(chaine1[i]!=chaine2[i]) res=0;
+    i++;
+  }
+  if(chaine2[i]!='\0') res=0; //La chaine 2 n'est pas complete
+  if(chaine2[i]=='\0' && chaine1[i]>32) res=0; //La chaine 1 contient un la 2 mais pas d'espace ou autre qui suit...
+  return res;
 }
