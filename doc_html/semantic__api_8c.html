@@ -69,6 +69,7 @@ $(function() {
 </div><!-- top -->
 <div class="header">
   <div class="summary">
+<a href="#define-members">Macros</a> &#124;
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
 <div class="title">semantic_api.c File Reference</div>  </div>
@@ -84,26 +85,252 @@ $(function() {
 <p class="definition">Definition in file <a class="el" href="semantic__api_8c_source.html">semantic_api.c</a>.</p>
 </div><div class="textblock"><code>#include &quot;semantic_api.h&quot;</code><br />
 <code>#include &quot;syntax_api.h&quot;</code><br />
+<code>#include &quot;utils.h&quot;</code><br />
 <code>#include &lt;stdio.h&gt;</code><br />
 <code>#include &lt;string.h&gt;</code><br />
 </div>
 <p><a href="semantic__api_8c_source.html">Go to the source code of this file.</a></p>
 <table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
+Macros</h2></td></tr>
+<tr class="memitem:a0ef1741c706c3f88e1a8d38d0d5c3f4f"><td class="memItemLeft" align="right" valign="top"><a id="a0ef1741c706c3f88e1a8d38d0d5c3f4f"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>S_VALID</b>&#160;&#160;&#160;0</td></tr>
+<tr class="separator:a0ef1741c706c3f88e1a8d38d0d5c3f4f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1e1da4b01592aa24f7c2dc1af74080a7"><td class="memItemLeft" align="right" valign="top"><a id="a1e1da4b01592aa24f7c2dc1af74080a7"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>S_NON_VALID</b>&#160;&#160;&#160;1</td></tr>
+<tr class="separator:a1e1da4b01592aa24f7c2dc1af74080a7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acae1f3329c6c75187449f9783e64cbe6"><td class="memItemLeft" align="right" valign="top"><a id="acae1f3329c6c75187449f9783e64cbe6"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>S_METHOD</b>&#160;&#160;&#160;{&quot;GET&quot;,&quot;HEAD&quot;,&quot;POST&quot;}</td></tr>
+<tr class="separator:acae1f3329c6c75187449f9783e64cbe6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a77f007dbf229b7d199cf5028b376bee4"><td class="memItemLeft" align="right" valign="top"><a id="a77f007dbf229b7d199cf5028b376bee4"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>S_METHOD_NB</b>&#160;&#160;&#160;3</td></tr>
+<tr class="separator:a77f007dbf229b7d199cf5028b376bee4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af37f5971c3c747303e297753f035cdfd"><td class="memItemLeft" align="right" valign="top"><a id="af37f5971c3c747303e297753f035cdfd"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>S_HEADER</b>&#160;&#160;&#160;{&quot;Transfer-Encoding-header&quot;,&quot;Cookie-header&quot;,&quot;Referer-header&quot;, &quot;User-Agent-header&quot;, &quot;Accept-header&quot;, &quot;Accept-Encoding-header&quot;, &quot;Content-Length-header&quot;,&quot;Host-header&quot;,&quot;Connection-header&quot;}</td></tr>
+<tr class="separator:af37f5971c3c747303e297753f035cdfd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6da6cbf4e6d45838040bf1294b7d23a0"><td class="memItemLeft" align="right" valign="top"><a id="a6da6cbf4e6d45838040bf1294b7d23a0"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>S_HEADER_NB</b>&#160;&#160;&#160;9</td></tr>
+<tr class="separator:a6da6cbf4e6d45838040bf1294b7d23a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae0bf41240a219667394c33f386d216cc"><td class="memItemLeft" align="right" valign="top"><a id="ae0bf41240a219667394c33f386d216cc"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>S_VERSION</b>&#160;&#160;&#160;{&quot;HTTP/1.0&quot;,&quot;HTTP/1.1&quot;}</td></tr>
+<tr class="separator:ae0bf41240a219667394c33f386d216cc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aff32293e55659e510c55b3509560cfa1"><td class="memItemLeft" align="right" valign="top"><a id="aff32293e55659e510c55b3509560cfa1"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>S_VERSION_NB</b>&#160;&#160;&#160;2</td></tr>
+<tr class="separator:aff32293e55659e510c55b3509560cfa1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a159696a8898c7483afb4461727f67c21"><td class="memItemLeft" align="right" valign="top"><a id="a159696a8898c7483afb4461727f67c21"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>S_CONNECTION</b>&#160;&#160;&#160;{&quot;keep-alive&quot;,&quot;close&quot;}</td></tr>
+<tr class="separator:a159696a8898c7483afb4461727f67c21"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8ce79b520ee2be4bce26723b1dce2c3b"><td class="memItemLeft" align="right" valign="top"><a id="a8ce79b520ee2be4bce26723b1dce2c3b"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>S_CONNECTION_NB</b>&#160;&#160;&#160;2</td></tr>
+<tr class="separator:a8ce79b520ee2be4bce26723b1dce2c3b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:ac9a8f4f9d12146abf6ac9ae1af693a86"><td class="memItemLeft" align="right" valign="top"><a id="ac9a8f4f9d12146abf6ac9ae1af693a86"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>semantic</b> (void *root)</td></tr>
+<tr class="memitem:ac9a8f4f9d12146abf6ac9ae1af693a86"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="semantic__api_8c.html#ac9a8f4f9d12146abf6ac9ae1af693a86">semantic</a> (void *root)</td></tr>
+<tr class="memdesc:ac9a8f4f9d12146abf6ac9ae1af693a86"><td class="mdescLeft">&#160;</td><td class="mdescRight">Fonction qui verifie la sémantique de la requete HTTP.  <a href="semantic__api_8c.html#ac9a8f4f9d12146abf6ac9ae1af693a86">More...</a><br /></td></tr>
 <tr class="separator:ac9a8f4f9d12146abf6ac9ae1af693a86"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af774e958defb72f09cae326575884191"><td class="memItemLeft" align="right" valign="top"><a id="af774e958defb72f09cae326575884191"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>http_version</b> (char *version, char *host)</td></tr>
+<tr class="memitem:af774e958defb72f09cae326575884191"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="semantic__api_8c.html#af774e958defb72f09cae326575884191">http_version</a> (char *version, char *host)</td></tr>
+<tr class="memdesc:af774e958defb72f09cae326575884191"><td class="mdescLeft">&#160;</td><td class="mdescRight">Fonction qui verifie la version HTTP (1.0 ou 1.1), si c'est la version 1.1 alors on verifie que le champ Host est bien present.  <a href="semantic__api_8c.html#af774e958defb72f09cae326575884191">More...</a><br /></td></tr>
 <tr class="separator:af774e958defb72f09cae326575884191"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad85cd6f500d5fae054bb33c7cab0a2f7"><td class="memItemLeft" align="right" valign="top"><a id="ad85cd6f500d5fae054bb33c7cab0a2f7"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>method</b> (char *method)</td></tr>
+<tr class="memitem:ad85cd6f500d5fae054bb33c7cab0a2f7"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="semantic__api_8c.html#ad85cd6f500d5fae054bb33c7cab0a2f7">method</a> (char *method)</td></tr>
+<tr class="memdesc:ad85cd6f500d5fae054bb33c7cab0a2f7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Fonction qui verifie le champ method, cette methode doit etre soit GET, HEAD ou POST.  <a href="semantic__api_8c.html#ad85cd6f500d5fae054bb33c7cab0a2f7">More...</a><br /></td></tr>
 <tr class="separator:ad85cd6f500d5fae054bb33c7cab0a2f7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac734a90b903fa818531fd769e17e6120"><td class="memItemLeft" align="right" valign="top"><a id="ac734a90b903fa818531fd769e17e6120"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>header</b> (void *root)</td></tr>
-<tr class="separator:ac734a90b903fa818531fd769e17e6120"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2b507755e6d0ff231e04ebaed01b282f"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="semantic__api_8c.html#a2b507755e6d0ff231e04ebaed01b282f">header_unique</a> (void *root)</td></tr>
+<tr class="memdesc:a2b507755e6d0ff231e04ebaed01b282f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Fonction qui verifie que chaque header est unique.  <a href="semantic__api_8c.html#a2b507755e6d0ff231e04ebaed01b282f">More...</a><br /></td></tr>
+<tr class="separator:a2b507755e6d0ff231e04ebaed01b282f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abb2d93d66b7d3a7cc88e2a70247e9c6a"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="semantic__api_8c.html#abb2d93d66b7d3a7cc88e2a70247e9c6a">connection</a> (void *root)</td></tr>
+<tr class="memdesc:abb2d93d66b7d3a7cc88e2a70247e9c6a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Fonction qui verifie le champ connection-option est bien close ou keep-alive.  <a href="semantic__api_8c.html#abb2d93d66b7d3a7cc88e2a70247e9c6a">More...</a><br /></td></tr>
+<tr class="separator:abb2d93d66b7d3a7cc88e2a70247e9c6a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a43d7d7b531f3f8f016a2c29bc642f490"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="semantic__api_8c.html#a43d7d7b531f3f8f016a2c29bc642f490">content_length</a> (void *root)</td></tr>
+<tr class="memdesc:a43d7d7b531f3f8f016a2c29bc642f490"><td class="mdescLeft">&#160;</td><td class="mdescRight">Fonction qui verifie le champ Content-length et Transfer-Encoding ne sont pas present en meme temps.  <a href="semantic__api_8c.html#a43d7d7b531f3f8f016a2c29bc642f490">More...</a><br /></td></tr>
+<tr class="separator:a43d7d7b531f3f8f016a2c29bc642f490"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
+<h2 class="groupheader">Function Documentation</h2>
+<a id="abb2d93d66b7d3a7cc88e2a70247e9c6a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abb2d93d66b7d3a7cc88e2a70247e9c6a">&#9670;&nbsp;</a></span>connection()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int connection </td>
+          <td>(</td>
+          <td class="paramtype">void *&#160;</td>
+          <td class="paramname"><em>root</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Fonction qui verifie le champ connection-option est bien close ou keep-alive. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">root</td><td>racine de l'arbre </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>1 si c'est le cas 0 sinon </dd></dl>
+
+<p class="definition">Definition at line <a class="el" href="semantic__api_8c_source.html#l00117">117</a> of file <a class="el" href="semantic__api_8c_source.html">semantic_api.c</a>.</p>
+
+</div>
+</div>
+<a id="a43d7d7b531f3f8f016a2c29bc642f490"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a43d7d7b531f3f8f016a2c29bc642f490">&#9670;&nbsp;</a></span>content_length()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int content_length </td>
+          <td>(</td>
+          <td class="paramtype">void *&#160;</td>
+          <td class="paramname"><em>root</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Fonction qui verifie le champ Content-length et Transfer-Encoding ne sont pas present en meme temps. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">root</td><td>racine de l'arbre </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>1 si c'est le cas 0 sinon </dd></dl>
+
+<p class="definition">Definition at line <a class="el" href="semantic__api_8c_source.html#l00129">129</a> of file <a class="el" href="semantic__api_8c_source.html">semantic_api.c</a>.</p>
+
+</div>
+</div>
+<a id="a2b507755e6d0ff231e04ebaed01b282f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2b507755e6d0ff231e04ebaed01b282f">&#9670;&nbsp;</a></span>header_unique()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int header_unique </td>
+          <td>(</td>
+          <td class="paramtype">void *&#160;</td>
+          <td class="paramname"><em>root</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Fonction qui verifie que chaque header est unique. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">root</td><td>racine de l'arbre </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>1 si c'est le cas 0 sinon </dd></dl>
+
+<p class="definition">Definition at line <a class="el" href="semantic__api_8c_source.html#l00099">99</a> of file <a class="el" href="semantic__api_8c_source.html">semantic_api.c</a>.</p>
+
+</div>
+</div>
+<a id="af774e958defb72f09cae326575884191"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af774e958defb72f09cae326575884191">&#9670;&nbsp;</a></span>http_version()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int http_version </td>
+          <td>(</td>
+          <td class="paramtype">char *&#160;</td>
+          <td class="paramname"><em>version</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">char *&#160;</td>
+          <td class="paramname"><em>host</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Fonction qui verifie la version HTTP (1.0 ou 1.1), si c'est la version 1.1 alors on verifie que le champ Host est bien present. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">version</td><td>pointeur vers le champ version de HTTP </td></tr>
+    <tr><td class="paramname">host</td><td>pointeur vers le (potentiel) champ host </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>1 si c'est correcte 0 sinon </dd></dl>
+
+<p class="definition">Definition at line <a class="el" href="semantic__api_8c_source.html#l00078">78</a> of file <a class="el" href="semantic__api_8c_source.html">semantic_api.c</a>.</p>
+
+</div>
+</div>
+<a id="ad85cd6f500d5fae054bb33c7cab0a2f7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad85cd6f500d5fae054bb33c7cab0a2f7">&#9670;&nbsp;</a></span>method()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int method </td>
+          <td>(</td>
+          <td class="paramtype">char *&#160;</td>
+          <td class="paramname"><em>method</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Fonction qui verifie le champ method, cette methode doit etre soit GET, HEAD ou POST. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">method</td><td>pointeur vers le champ method </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>1 si c'est le cas 0 sinon </dd></dl>
+
+<p class="definition">Definition at line <a class="el" href="semantic__api_8c_source.html#l00089">89</a> of file <a class="el" href="semantic__api_8c_source.html">semantic_api.c</a>.</p>
+
+</div>
+</div>
+<a id="ac9a8f4f9d12146abf6ac9ae1af693a86"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac9a8f4f9d12146abf6ac9ae1af693a86">&#9670;&nbsp;</a></span>semantic()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int semantic </td>
+          <td>(</td>
+          <td class="paramtype">void *&#160;</td>
+          <td class="paramname"><em>root</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Fonction qui verifie la sémantique de la requete HTTP. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">root</td><td>racine de l'arbre </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>1 si la semantique est correcte 0 sinon </dd></dl>
+
+<p class="definition">Definition at line <a class="el" href="semantic__api_8c_source.html#l00039">39</a> of file <a class="el" href="semantic__api_8c_source.html">semantic_api.c</a>.</p>
+
+</div>
+</div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

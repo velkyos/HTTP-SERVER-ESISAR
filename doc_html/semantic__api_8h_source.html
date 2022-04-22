@@ -75,27 +75,28 @@ $(function() {
 <div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="preprocessor">#ifndef SEMANTIC_API_H</span></div>
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="preprocessor">  #define SEMANTIC_API_H</span></div>
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160; </div>
-<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;  <span class="comment">//Methode à implementer</span></div>
-<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">  #define S_METHOD {&quot;GET&quot;,&quot;HEAD&quot;,&quot;POST&quot;}</span></div>
-<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">  #define S_METHOD_NB 3</span></div>
-<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160; </div>
-<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;  <span class="comment">//Headers à implementer</span></div>
-<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">  #define S_HEADER {&quot;Transfer-Encoding-header&quot;,&quot;Cookie-header&quot;,&quot;Referer-header&quot;, &quot;User-Agent-header&quot;, &quot;Accept-header&quot;, &quot;Accept-Encoding-header&quot;, &quot;Content-Length-header&quot;,&quot;Host-header&quot;,&quot;Connection-header&quot;}</span></div>
-<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor">  #define S_HEADER_NB 9</span></div>
-<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160; </div>
-<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="preprocessor">  #define S_VERSION {&quot;HTTP/1.0&quot;,&quot;HTTP/1.1&quot;}</span></div>
-<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="preprocessor">  #define S_VERSION_NB 2</span></div>
-<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160; </div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;  <span class="keywordtype">int</span> semantic(<span class="keywordtype">void</span> *root);</div>
-<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160; </div>
-<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;  <span class="keywordtype">int</span> http_version(<span class="keywordtype">char</span> *version,<span class="keywordtype">char</span> *host);</div>
-<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160; </div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;  <span class="keywordtype">int</span> method(<span class="keywordtype">char</span> *method);</div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160; </div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;  <span class="keywordtype">int</span> header(<span class="keywordtype">void</span> *root);</div>
+<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160; </div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="semantic__api_8c.html#ac9a8f4f9d12146abf6ac9ae1af693a86">semantic</a>(<span class="keywordtype">void</span> *root);</div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160; </div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160; </div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="semantic__api_8c.html#af774e958defb72f09cae326575884191">http_version</a>(<span class="keywordtype">char</span> *version,<span class="keywordtype">char</span> *host);</div>
 <div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160; </div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="semantic__api_8c.html#ad85cd6f500d5fae054bb33c7cab0a2f7">method</a>(<span class="keywordtype">char</span> *<a class="code" href="semantic__api_8c.html#ad85cd6f500d5fae054bb33c7cab0a2f7">method</a>);</div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160; </div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="semantic__api_8c.html#a2b507755e6d0ff231e04ebaed01b282f">header_unique</a>(<span class="keywordtype">void</span> *root);</div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160; </div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="semantic__api_8c.html#abb2d93d66b7d3a7cc88e2a70247e9c6a">connection</a>(<span class="keywordtype">void</span> *root);</div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160; </div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="semantic__api_8c.html#a43d7d7b531f3f8f016a2c29bc642f490">content_length</a>(<span class="keywordtype">void</span> *root);</div>
+<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160; </div>
+<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;<span class="preprocessor">#endif</span></div>
 </div><!-- fragment --></div><!-- contents -->
+<div class="ttc" id="asemantic__api_8c_html_a2b507755e6d0ff231e04ebaed01b282f"><div class="ttname"><a href="semantic__api_8c.html#a2b507755e6d0ff231e04ebaed01b282f">header_unique</a></div><div class="ttdeci">int header_unique(void *root)</div><div class="ttdoc">Fonction qui verifie que chaque header est unique.</div><div class="ttdef"><b>Definition:</b> <a href="semantic__api_8c_source.html#l00099">semantic_api.c:99</a></div></div>
+<div class="ttc" id="asemantic__api_8c_html_ad85cd6f500d5fae054bb33c7cab0a2f7"><div class="ttname"><a href="semantic__api_8c.html#ad85cd6f500d5fae054bb33c7cab0a2f7">method</a></div><div class="ttdeci">int method(char *method)</div><div class="ttdoc">Fonction qui verifie le champ method, cette methode doit etre soit GET, HEAD ou POST.</div><div class="ttdef"><b>Definition:</b> <a href="semantic__api_8c_source.html#l00089">semantic_api.c:89</a></div></div>
+<div class="ttc" id="asemantic__api_8c_html_abb2d93d66b7d3a7cc88e2a70247e9c6a"><div class="ttname"><a href="semantic__api_8c.html#abb2d93d66b7d3a7cc88e2a70247e9c6a">connection</a></div><div class="ttdeci">int connection(void *root)</div><div class="ttdoc">Fonction qui verifie le champ connection-option est bien close ou keep-alive.</div><div class="ttdef"><b>Definition:</b> <a href="semantic__api_8c_source.html#l00117">semantic_api.c:117</a></div></div>
+<div class="ttc" id="asemantic__api_8c_html_af774e958defb72f09cae326575884191"><div class="ttname"><a href="semantic__api_8c.html#af774e958defb72f09cae326575884191">http_version</a></div><div class="ttdeci">int http_version(char *version, char *host)</div><div class="ttdoc">Fonction qui verifie la version HTTP (1.0 ou 1.1), si c'est la version 1.1 alors on verifie que le ch...</div><div class="ttdef"><b>Definition:</b> <a href="semantic__api_8c_source.html#l00078">semantic_api.c:78</a></div></div>
+<div class="ttc" id="asemantic__api_8c_html_ac9a8f4f9d12146abf6ac9ae1af693a86"><div class="ttname"><a href="semantic__api_8c.html#ac9a8f4f9d12146abf6ac9ae1af693a86">semantic</a></div><div class="ttdeci">int semantic(void *root)</div><div class="ttdoc">Fonction qui verifie la sémantique de la requete HTTP.</div><div class="ttdef"><b>Definition:</b> <a href="semantic__api_8c_source.html#l00039">semantic_api.c:39</a></div></div>
+<div class="ttc" id="asemantic__api_8c_html_a43d7d7b531f3f8f016a2c29bc642f490"><div class="ttname"><a href="semantic__api_8c.html#a43d7d7b531f3f8f016a2c29bc642f490">content_length</a></div><div class="ttdeci">int content_length(void *root)</div><div class="ttdoc">Fonction qui verifie le champ Content-length et Transfer-Encoding ne sont pas present en meme temps.</div><div class="ttdef"><b>Definition:</b> <a href="semantic__api_8c_source.html#l00129">semantic_api.c:129</a></div></div>
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
 Generated by &#160;<a href="http://www.doxygen.org/index.html">
