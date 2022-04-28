@@ -27,7 +27,7 @@ int parser(char *req, int len){
 		_Token *t = searchTree(root, "message-body");
 		derivation_tree *body = (derivation_tree *)t->node;
 		body->value_length = (n != NOT_VALID && len - n != 0) ? len - n : NOT_VALID;
-		printf("Message Body : %s\n", body->value);
+		//printf("Message Body : %s\n", body->value);
 		purgeElement(&t);
 	}
 	return (n != NOT_VALID) ? n : 0;
@@ -51,7 +51,7 @@ _Token *searchTree(void *start,char *name){
 	if (list->node == NULL && list->next == NULL)
 	{
 		free(list);
-		printf("Didn't Find any %s !\n", name);
+		//printf("Didn't Find any %s !\n", name);
 		return NULL;
 	}
 	return list;

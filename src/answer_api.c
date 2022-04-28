@@ -16,7 +16,7 @@
 
 char * concat_answer(Answer_list *answer, int *length){
 	Answer_list *temp = answer;
-	*length = 2; //For the two \n before body
+	*length = 3; //For the two \n before body and null Char
 
 
 	while (temp != NULL)
@@ -25,7 +25,8 @@ char * concat_answer(Answer_list *answer, int *length){
 		temp = temp->next;
 	}
 
-	char *message = malloc( *length + 1);
+	char *message = malloc(*length);
+	memset(message, '\0', *length);
 
 	temp = answer;
 	while ( temp != NULL && temp->tag != UTI_STATUS) temp = temp->next;

@@ -70,10 +70,16 @@ int main(int argc, char const *argv[])
 		if( answer ) {
 			writeDirectClient(answer->clientId, answer->buf, answer->len);
 			endWriteDirectClient(answer->clientId);
-			requestShutdownSocket(answer->clientId);
+
+			if ( get_connection_status() == PRO_CLOSE)
+			{
+				requestShutdownSocket(answer->clientId);
+				printf(">>>>Connection close\n");
+			}
 		}
 		else{
 			requestShutdownSocket(answer->clientId);
+			printf(">>>>Connection close\n");
 		}
 
 		freeRequest(request);

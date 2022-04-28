@@ -42,6 +42,7 @@ void generate_body(Answer_list **answer, FileData *file);
 
 FileData *get_file_data(derivation_tree *request);
 char *get_file_name(derivation_tree *request);
+void copy_to_answer(char *_value, Answer_list **answer);
 
 void generate_age_header(Answer_list **answer);
 void generate_date_header(Answer_list **answer);
@@ -55,9 +56,11 @@ void generate_connection_header(derivation_tree *request, Answer_list **answer);
 /* Definition */
 
 Config_server *config = NULL;
+int connection_status = PRO_UNKNOWN;
 
 char *process_request(derivation_tree *request, Config_server *_config, int *anwser_len){
 	config = _config;
+	connection_status = PRO_CLOSE;
     Answer_list *answer = NULL;
 
     _Token *method = searchTree( request, "method");
@@ -77,6 +80,7 @@ char *process_request(derivation_tree *request, Config_server *_config, int *anw
     char * answer_text = concat_answer(answer, anwser_len);
 
 	purge_answer(&answer);
+	purgeElement(&method);
 
 	return answer_text;
 }
@@ -137,15 +141,23 @@ char *get_file_name(derivation_tree *request){
 
 	char *name = NULL;
 	if( target_len == 1){
-		name = malloc((target_len + strlen(site->root) + strlen(site->index) + 1) * sizeof(char));
-		strcpy(name, site->root);
-		strncat(name, target_val, target_len);
-		strcat(name, site->index);
+		int len = target_len + site->root_len + site->index_len + 1;
+		name = malloc(len);
+		if (name){
+			memset(name, '\0', len);
+			strcpy(name, site->root);
+			strncat(name, target_val, target_len);
+			strcat(name, site->index);
+		}
 	}
 	else{
-		name = malloc( target_len + strlen(site->root) + 1);
-		strcpy(name, site->root);
-		strncat(name, target_val, target_len);
+		int len = target_len + site->root_len + 1;
+		name = malloc(len);
+		if (name){
+			memset(name, '\0', len);
+			strcpy(name, site->root);
+			strncat(name, target_val, target_len);
+		}
 	}
 
 	purgeElement(&host);
@@ -153,6 +165,22 @@ char *get_file_name(derivation_tree *request){
 
 	return name;
 }
+
+int get_connection_status(){
+	return connection_status;
+}
+
+void copy_to_answer(char *_value, Answer_list **answer){
+	char *value = malloc(strlen(_value) + 1);
+	if(value){
+		memcpy(value, _value, strlen(_value) + 1);
+		add_node_answer( answer, UTI_HEADER, value, strlen(value), UTI_CANFREE);
+	}
+}
+
+/*
+Generation of response
+*/
 
 void generate_status(derivation_tree *request, Answer_list **answer, FileData *file){
 	if(file == NULL) {
@@ -187,6 +215,7 @@ void generate_body(Answer_list **answer, FileData *file){
 void generate_age_header(Answer_list **answer){
 	add_node_answer( answer, UTI_HEADER, "Age: 0", 6, 0);
 }
+
 void generate_date_header(Answer_list **answer){
 	time_t t;
 	time(&t);
@@ -194,38 +223,38 @@ void generate_date_header(Answer_list **answer){
 	char *value_t = gmt_time(&t);
 	char value[50] = "";
 	sprintf(value, "Date: %s", value_t);
-	char *rvalue = malloc(strlen(value) * sizeof(char));
-
-	strcpy(rvalue, value);
-	add_node_answer( answer, UTI_HEADER, rvalue, strlen(rvalue), UTI_CANFREE);
+	
+	copy_to_answer(value, answer);
 
 	free(value_t);
 }
+
 void generate_Allow_header(Answer_list **answer){
 	add_node_answer( answer, UTI_HEADER, "Allow: GET, HEAD", 16, 0);
 }
+
 void generate_content_length_header(Answer_list **answer, FileData *file){
 	char value[50] = "";
 	sprintf(value, "Content-Length: %d", file->len);
-	char *rvalue = malloc(strlen(value) * sizeof(char));
 
-	strcpy(rvalue, value);
-	add_node_answer( answer, UTI_HEADER, rvalue, strlen(rvalue), UTI_CANFREE);
+	copy_to_answer(value, answer);
 }
+
 void generate_content_type_header(Answer_list **answer, FileData *file){
 	add_node_answer( answer, UTI_HEADER, "Content-Type: text/html; charset=UTF-8", 38, 0);
 }	
+
 void generate_server_header(Answer_list **answer){
 	add_node_answer( answer, UTI_HEADER, "Server: Esisar Groupe 10", 24, 0);
 }
+
 void generate_keep_alive_header(derivation_tree *request, Answer_list **answer){
 	char value[50] = "";
 	sprintf(value, "Keep-Alive: timeout=%d, max=%d", config->keepTimeOut, config->keepMax);
-	char *rvalue = malloc(strlen(value) * sizeof(char));
 
-	strcpy(rvalue, value);
-	add_node_answer( answer, UTI_HEADER, rvalue, strlen(rvalue), UTI_CANFREE);
+	copy_to_answer(value, answer);
 }
+
 void generate_connection_header(derivation_tree *request, Answer_list **answer){
 	char value[50] = "";
 
@@ -236,15 +265,15 @@ void generate_connection_header(derivation_tree *request, Answer_list **answer){
 
 		if(strncmp("keep-alive", tok_val, tok_len) == 0){
 			generate_keep_alive_header(request, answer);
-			/* Handle Keep-alive */
+			connection_status = PRO_KEEP_ALIVE;
 		}else if (strncmp("close", tok_val, tok_len) == 0){
-			/* Handle close */
+			connection_status = PRO_CLOSE;
 		}
 
 		sprintf(value, "Connection: %.*s", tok_len, tok_val);
-		char *rvalue = malloc(strlen(value) * sizeof(char));
 
-		strcpy(rvalue, value);
-		add_node_answer( answer, UTI_HEADER, rvalue, strlen(rvalue), UTI_CANFREE);
+		copy_to_answer(value, answer);
 	}
+
+	purgeElement(&tok);
 }

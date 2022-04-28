@@ -45,7 +45,7 @@ index=index2.html
 
 /* Declaration */
 
-int find_field_s(char *start, char *name, char *end, char **dest);
+int find_field_s(char *start, char *name, char *end, char **dest, int *len);
 int find_field_n(char *start, char *name, char *end, int *dest);
 char *find_section(char *start, char *name, char **end);
 
@@ -85,9 +85,9 @@ Config_server *get_config(char *file_name){
 
         if (!(ptr)) return NULL;
 
-        if ( !find_field_s(ptr, "name=", end, &config->websites[i].name ) ) return NULL;
-        if ( !find_field_s(ptr, "root=", end, &config->websites[i].root ) ) return NULL;
-        if ( !find_field_s(ptr, "index=", end, &config->websites[i].index ) ) return NULL;
+        if ( !find_field_s(ptr, "name=", end, &config->websites[i].name, &config->websites[i].name_len ) ) return NULL;
+        if ( !find_field_s(ptr, "root=", end, &config->websites[i].root, &config->websites[i].root_len ) ) return NULL;
+        if ( !find_field_s(ptr, "index=", end, &config->websites[i].index, &config->websites[i].index_len ) ) return NULL;
     }
     return config;
 }
@@ -112,7 +112,7 @@ char *find_section(char *start, char *name, char **end){
     return pos;
 }
 
-int find_field_s(char *start, char *name, char *end, char **dest){
+int find_field_s(char *start, char *name, char *end, char **dest, int *len){
     char *pos = strstr( start, name);
 
     pos += strlen(name);
@@ -122,10 +122,11 @@ int find_field_s(char *start, char *name, char *end, char **dest){
 
     if ( temp >= end || *temp == '\0') return 0;    
 
-    int n = temp - pos;
+    *len = temp - pos;
 
-    *dest = malloc(n + 1);
-    strncpy( *dest, pos, n);
+    *dest = malloc(*len + 1);
+	memset(*dest, '\0', *len + 1);
+    strncpy( *dest, pos, *len);
     return 1;
 }
 

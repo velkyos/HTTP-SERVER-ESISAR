@@ -9,6 +9,9 @@
         char *name;
         char *root;
         char *index;
+		int name_len;
+		int root_len;
+		int index_len;
     }Website;
 
 	/**
