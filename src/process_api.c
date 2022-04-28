@@ -193,9 +193,9 @@ void generate_status(derivation_tree *request, Answer_list **answer, FileData *f
 
 void generate_header_fields(derivation_tree *request, Answer_list **answer, FileData *file){
 	if(file != NULL){
-		generate_content_length_header(answer, file);
 		generate_content_type_header(answer, file);
 	}
+	generate_content_length_header(answer, file);
 	generate_age_header(answer);
 	generate_server_header(answer);
 	generate_connection_header(request, answer);
@@ -235,7 +235,9 @@ void generate_Allow_header(Answer_list **answer){
 
 void generate_content_length_header(Answer_list **answer, FileData *file){
 	char value[50] = "";
-	sprintf(value, "Content-Length: %d", file->len);
+	
+	if ( file != NULL) sprintf(value, "Content-Length: %d", file->len);
+	else sprintf(value, "Content-Length: %d", 0);
 
 	copy_to_answer(value, answer);
 }
