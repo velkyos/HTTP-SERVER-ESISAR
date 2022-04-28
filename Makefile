@@ -3,13 +3,13 @@ OBJDIR = bin
 
 BIN = http-server
 CC = gcc
-FLAGS = -Wall
+FLAGS = -Wall 
 
 C_FILES = $(wildcard $(FILEDIR)/*.c)
 OBJ_FILES = $(addprefix $(OBJDIR)/, $(notdir $(C_FILES:.c=.o)))
 
 all: $(OBJ_FILES)
-	$(CC) $(FLAGS) -o $(BIN) $^ -L. -lrequest
+	$(CC) $(FLAGS) -o $(BIN) $^ -L. -lrequest -lmagic
 
 $(OBJ_FILES): | $(OBJDIR)
 

@@ -106,6 +106,7 @@ message *get_answer(message *request, int index){
 			answer->buf= ok_message;
 			answer->len= strlen(ok_message);
 			semantic(getRootTree()); //ICI
+			printf("Content-type: %s\n",content_type("doxygen-awesome.css"));
 		}
 		else {
 			answer->buf= error_message;
