@@ -1,6 +1,7 @@
 #ifndef DERIVATION_TREE_H
 	#define DERIVATION_TREE_H
 
+	#include <stdio.h>
 
 	/* Declaration */
 

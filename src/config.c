@@ -50,7 +50,6 @@ int find_field_n(char *start, char *name, char *end, int *dest);
 char *find_section(char *start, char *name, char **end);
 
 /* Definition */
-
 /**
  * @brief Read the config file `file_name`, if not found return NULL
  * @see Config_server
@@ -90,7 +89,6 @@ Config_server *get_config(char *file_name){
     }
     return config;
 }
-
 
 char *find_section(char *start, char *name, char **end){
     char *pos = strstr( start, name);
@@ -138,6 +136,15 @@ int find_field_n(char *start, char *name, char *end, int *dest){
     *dest = strtol(pos, &end, 10);
 
     return end == pos ? 0 : 1;
+}
+
+Website *find_website(Config_server *config, char *host, int len){
+	int count = config->hosts;
+	for (int i = 0; i < count; i++)
+	{
+		if ( strncmp(host, config->websites[i].name, len) == 0) return &config->websites[i];
+	}
+	return NULL;
 }
 
 void free_config(Config_server *config){

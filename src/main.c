@@ -34,7 +34,7 @@
 char error_message[] = "Code 400 : Bad Request\n";
 char ok_message[] = "Code 200 : OK\n";
 
-message *get_answer(message* request, int index);
+message *get_answer(message* request, int index, Config_server *config);
 
 
 /* Definition */
@@ -69,7 +69,7 @@ int main(int argc, char const *argv[])
 		printf("Client [%d] [%s:%d]\n",request->clientId,inet_ntoa(request->clientAddress->sin_addr),htons(request->clientAddress->sin_port));
 		printf("Request content :\n%.*s\n\n",request->len,request->buf);  
 
-		answer = get_answer(request, n);
+		answer = get_answer(request, n, config);
 		if( answer ) {
 			writeDirectClient(answer->clientId, answer->buf, answer->len);
 			endWriteDirectClient(answer->clientId);
@@ -87,7 +87,7 @@ int main(int argc, char const *argv[])
 	return 0;
 }
 
-message *get_answer(message *request, int index){
+message *get_answer(message *request, int index, Config_server *config){
 	message *answer = malloc(sizeof(message));
 
 	if (answer){
@@ -100,7 +100,7 @@ message *get_answer(message *request, int index){
 			print_tree(file, getRootTree());
 			fclose(file);
 		}
-
+		process_request(getRootTree(), config);
 		if (res_parser ) {
 			answer->buf= ok_message;
 			answer->len= strlen(ok_message); 

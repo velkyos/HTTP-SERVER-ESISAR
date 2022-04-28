@@ -16,6 +16,7 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <sys/mman.h>
+#include <time.h>
 
 
 char *read_file(char *name, int *len){
@@ -49,4 +50,24 @@ FILE *open_file(char *name, char *option){
 		exit(-1);
 	}
 	return file;
+}
+
+
+char *gmt_time(time_t *t){
+
+	char *days[7] = {
+		"Mon","Tue","Wed","Thu","Fri","Sat","Sun"
+	};
+
+	char *months[12] = {
+		"Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"
+	};
+
+	struct tm *g = gmtime(t);
+
+	char *value = malloc(30* sizeof(char));
+
+	sprintf( value, "%s, %.2d %s %.4d %.2d:%.2d:%.2d GMT", days[g->tm_wday - 1], g->tm_mday, months[g->tm_mon], 1900 + g->tm_year, g->tm_hour, g->tm_min, g->tm_sec);
+
+	return value;
 }

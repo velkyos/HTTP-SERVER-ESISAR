@@ -29,6 +29,8 @@
 
     void generate_config_file();
 
+	Website *find_website(Config_server *config, char *host, int len);
+
 #endif
 
 

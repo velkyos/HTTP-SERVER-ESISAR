@@ -1,0 +1,80 @@
+|---HTTP-message
+|  |---start-line > GET /favicon.ico HTTP/1.1
+
+|  |  |---request-line > GET /favicon.ico HTTP/1.1
+
+|  |---header-field > Host: 0.0.0.0:8080
+|  |  |---Host-header > Host: 0.0.0.0:8080
+|  |---CRLF > 
+
+|  |  |---CR > 
+|  |  |---LF > 
+
+|  |---header-field > User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:99.0) Gecko/20100101 Firefox/99.0
+|  |  |---User-Agent-header > User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:99.0) Gecko/20100101 Firefox/99.0
+|  |---CRLF > 
+
+|  |  |---CR > 
+|  |  |---LF > 
+
+|  |---header-field > Accept: image/avif,image/webp,*/*
+|  |  |---Accept-header > Accept: image/avif,image/webp,*/*
+|  |---CRLF > 
+
+|  |  |---CR > 
+|  |  |---LF > 
+
+|  |---header-field > Accept-Language: en-US,en;q=0.5
+|  |  |---Accept-Language-header > Accept-Language: en-US,en;q=0.5
+|  |---CRLF > 
+
+|  |  |---CR > 
+|  |  |---LF > 
+
+|  |---header-field > Accept-Encoding: gzip, deflate
+|  |  |---Accept-Encoding-header > Accept-Encoding: gzip, deflate
+|  |---CRLF > 
+
+|  |  |---CR > 
+|  |  |---LF > 
+
+|  |---header-field > DNT: 1
+|  |  |---field-name > DNT
+|  |  |---OWS >  
+|  |  |---field-value > 1
+|  |  |---OWS > 
+|  |---CRLF > 
+
+|  |  |---CR > 
+|  |  |---LF > 
+
+|  |---header-field > Connection: keep-alive
+|  |  |---Connection-header > Connection: keep-alive
+|  |---CRLF > 
+
+|  |  |---CR > 
+|  |  |---LF > 
+
+|  |---header-field > Referer: http://0.0.0.0:8080/
+|  |  |---Referer-header > Referer: http://0.0.0.0:8080/
+|  |---CRLF > 
+
+|  |  |---CR > 
+|  |  |---LF > 
+
+|  |---header-field > Cache-Control: max-age=0
+|  |  |---field-name > Cache-Control
+|  |  |---OWS >  
+|  |  |---field-value > max-age=0
+|  |  |---OWS > 
+|  |---CRLF > 
+
+|  |  |---CR > 
+|  |  |---LF > 
+
+|  |---CRLF > 
+
+|  |  |---CR > 
+|  |  |---LF > 
+
+|  |---message-body > 
