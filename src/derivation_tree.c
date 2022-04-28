@@ -28,8 +28,8 @@
 derivation_tree *create_tree_node(const char *tag,const char *value, int value_length, int tree_level){
 	derivation_tree *node = (derivation_tree *)malloc( sizeof(derivation_tree) );
 	
-	node->tag = tag;
-	node->value = value;
+	node->tag = (char *)tag;
+	node->value = (char *)value;
 	node->value_length = value_length;
 	node->tree_level = tree_level;
 	node->children = NULL;
@@ -78,7 +78,7 @@ void purge_linked_children(linked_child **main_list){
 		ptr->next = NULL;
 		free(ptr);
 	}
-	return;
+
 }
 
 void purge_tree_node(derivation_tree *node){
@@ -90,7 +90,7 @@ void purge_tree_node(derivation_tree *node){
 	node->value = NULL;
 	node->children = NULL;
 	free(node);
-	return;
+
 }
 
 void print_tree(FILE *output, derivation_tree *tree){

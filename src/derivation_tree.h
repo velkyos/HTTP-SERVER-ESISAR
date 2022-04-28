@@ -14,8 +14,8 @@
 	 */
 	struct st_derivation_tree
 	{
-		const char *tag;
-		const char *value;
+		char *tag;
+		char *value;
 		int value_length;
 		int tree_level;
 		linked_child *children;

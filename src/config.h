@@ -20,6 +20,8 @@
         int port;
         int hosts;
         int maxcycle;
+		int keepTimeOut;
+		int keepMax;
     }Config_server;
 
 

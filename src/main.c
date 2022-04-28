@@ -18,16 +18,13 @@
 #include "syntax_api.h"
 #include "semantic_api.h"
 #include "process_api.h"
-#include "answer_api.h"
-#include "derivation_tree.h"
 #include "request.h"
 #include "config.h"
-#include "utils.h"
 
 /* Constants */
 
 #define false 0
-#define M_PRINT_TREE 1
+#define M_PRINT_TREE 0
 
 /* Declaration */
 
@@ -73,12 +70,14 @@ int main(int argc, char const *argv[])
 		if( answer ) {
 			writeDirectClient(answer->clientId, answer->buf, answer->len);
 			endWriteDirectClient(answer->clientId);
+			requestShutdownSocket(answer->clientId);
+		}
+		else{
+			requestShutdownSocket(answer->clientId);
 		}
 
-		requestShutdownSocket(answer->clientId);
-
 		freeRequest(request);
-		free(answer);
+		freeRequest(answer);
 		n++;
 	}
 
@@ -92,25 +91,20 @@ message *get_answer(message *request, int index, Config_server *config){
 
 	if (answer){
 		int res_parser = parser(request->buf, request->len);
-
-		if ( M_PRINT_TREE ) {
-			char name[50];
-			sprintf(name,"output_request_n_%d.log",index);
-			FILE *file = open_file(name,"w");
-			print_tree(file, getRootTree());
-			fclose(file);
-		}
-		process_request(getRootTree(), config);
+		
 		if (res_parser ) {
-			answer->buf= ok_message;
-			answer->len= strlen(ok_message); 
+
+			int len = 0;
+			char *answer_buff = process_request(getRootTree(), config, &len);
+			
+			answer->buf= answer_buff;
+			answer->len= len; 
 		}
 		else {
 			answer->buf= error_message;
 			answer->len= strlen(error_message); 
 		}
 		answer->clientId = request->clientId;
-
 		purgeTree(getRootTree());
 	}
 	return answer;

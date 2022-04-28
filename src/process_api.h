@@ -4,7 +4,9 @@
     #include "derivation_tree.h"
 	#include "config.h"
 
-    derivation_tree *process_request(derivation_tree *request, Config_server *config);
+
+
+    char *process_request(derivation_tree *request, Config_server *_config, int *anwser_len);
 
 #endif
 

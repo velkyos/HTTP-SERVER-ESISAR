@@ -72,6 +72,8 @@ Config_server *get_config(char *file_name){
     if ( !find_field_n(ptr, "port=", end, &config->port ) ) return NULL;
     if ( !find_field_n(ptr, "hosts=", end, &config->hosts ) ) return NULL;
     if ( !find_field_n(ptr, "maxcycle=", end, &config->maxcycle ) ) return NULL;
+	if ( !find_field_n(ptr, "timeout=", end, &config->keepTimeOut ) ) return NULL;
+	if ( !find_field_n(ptr, "maxalive=", end, &config->keepMax ) ) return NULL;
 
     config->websites = malloc( sizeof(Website) * config->hosts);
 
@@ -122,7 +124,7 @@ int find_field_s(char *start, char *name, char *end, char **dest){
 
     int n = temp - pos;
 
-    *dest = malloc(n);
+    *dest = malloc(n + 1);
     strncpy( *dest, pos, n);
     return 1;
 }
@@ -160,6 +162,6 @@ void free_config(Config_server *config){
 
 void generate_config_file(){
     FILE *file = open_file("server.ini","w");
-    fprintf(file,"[CONFIG]\nport=8080  #Listen Port\nhosts=1  #Numbers of host\nmaxcycle=0   #How many request you want to process before closing the server\n\n[HOST:0] #The number must start from 0 to hosts - 1\nname= #Name of the website\nroot= #root path (from http-server folder of absolute path)\nindex= #Default file to open if none is selected\n");
+    fprintf(file,"[CONFIG]\nport=8080  #Listen Port\nhosts=1  #Numbers of host\nmaxcycle=0   #How many request you want to process before closing the server\ntimeout=15\nmaxalive=100\n\n[HOST:0] #The number must start from 0 to hosts - 1\nname= #Name of the website\nroot= #root path (from http-server folder of absolute path)\nindex= #Default file to open if none is selected\n");
     fclose(file);
 }
