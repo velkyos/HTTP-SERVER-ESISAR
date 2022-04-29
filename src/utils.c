@@ -20,7 +20,7 @@
 
 
 char *read_file(char *name, int *len){
-    char *addr;
+    char *addr = NULL;
     int file;
     struct stat st;
 
@@ -32,9 +32,11 @@ char *read_file(char *name, int *len){
     }
     if (fstat(file, &st) == -1)
         return NULL;
-    if ((addr=mmap(NULL,st.st_size,PROT_WRITE,MAP_PRIVATE, file, 0)) == NULL )
-        return NULL;
+    /*if ((addr=mmap(NULL,st.st_size,PROT_WRITE | PROT_READ,MAP_PRIVATE, file, 0)) == NULL )
+        return NULL;*/
 
+	addr = malloc(st.st_size);
+	if(addr) read(file, addr, st.st_size);
 
     if (len) *len = st.st_size;
 
@@ -43,11 +45,13 @@ char *read_file(char *name, int *len){
     return addr;
 }
 
+
+
+
 FILE *open_file(char *name, char *option){
     FILE* file = fopen(name, option);
 	if (file == NULL){
-		printf("Error while opening %s\n", name);
-		exit(-1);
+		perror("open");
 	}
 	return file;
 }

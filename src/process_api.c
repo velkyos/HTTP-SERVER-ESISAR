@@ -13,6 +13,7 @@
 #include <string.h>
 #include <time.h>
 #include <stdlib.h>
+#include <magic.h>
 
 /* User Includes */
 
@@ -41,6 +42,7 @@ void generate_header_fields(derivation_tree *request, Answer_list **answer, File
 void generate_body(Answer_list **answer, FileData *file);
 
 FileData *get_file_data(derivation_tree *request);
+char *get_content_type(char *file_name);
 char *get_file_name(derivation_tree *request);
 void copy_to_answer(char *_value, Answer_list **answer);
 
@@ -172,10 +174,56 @@ int get_connection_status(){
 
 void copy_to_answer(char *_value, Answer_list **answer){
 	char *value = malloc(strlen(_value) + 1);
+	int len = strlen(_value);
+	memset(value, '\0', len + 1);
 	if(value){
-		memcpy(value, _value, strlen(_value) + 1);
+		memcpy(value, _value, len + 1);
 		add_node_answer( answer, UTI_HEADER, value, strlen(value), UTI_CANFREE);
 	}
+}
+
+char * get_content_type(char *file_name){
+	const char *magic_full = NULL;
+	char * charset = NULL;
+	char * res = NULL;
+	magic_t magic_cookie;
+	int size;
+
+	magic_cookie = magic_open(MAGIC_MIME); //Creation magic cookie
+	if(magic_cookie == NULL){
+		perror("Erreur magic_open");
+		return NULL;
+	}
+
+	if(magic_load(magic_cookie,NULL) != 0){ //Chargement
+		perror("erreur magic_load");
+		return NULL;
+	}
+	magic_full = magic_file(magic_cookie,file_name); //Retour la description du namefile
+
+	if(strstr(magic_full,"text/plain;")!=NULL){ //Cas css et js qui n'est pas prix en compte pat libmagic
+		charset = strstr(magic_full,"charset="); //recherche charset
+
+		if(strstr(file_name,".css")!=NULL){ //cherche un .css
+			size = strlen(charset) + 11;
+			res = malloc(size);
+			if (res) sprintf(res, "text/css; %s", charset);
+
+		}else if(strstr(file_name,".js")!=NULL){ //cherche un .js
+			size = strlen(charset) + 18;
+			res = malloc(size);
+			if (res) sprintf(res, "text/javascript; %s", charset);
+		
+		}
+	}else{
+		size = strlen(magic_full);
+		res = malloc(size + 1);
+		if(res) {
+			memcpy(res, magic_full ,size + 1); //Convertion const char * en char *
+		}
+	}
+	magic_close(magic_cookie);
+	return res;
 }
 
 /*
@@ -243,7 +291,12 @@ void generate_content_length_header(Answer_list **answer, FileData *file){
 }
 
 void generate_content_type_header(Answer_list **answer, FileData *file){
-	add_node_answer( answer, UTI_HEADER, "Content-Type: text/html; charset=UTF-8", 38, 0);
+	char value[80] = "";
+	sprintf(value, "Content-Type: %s", get_content_type( file->name));
+
+	copy_to_answer(value, answer);
+
+	//add_node_answer( answer, UTI_HEADER, "Content-Type: image/jpeg", 24, 0);
 }	
 
 void generate_server_header(Answer_list **answer){

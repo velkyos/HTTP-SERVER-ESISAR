@@ -58,7 +58,6 @@ char * concat_answer(Answer_list *answer, int *length){
 	return message;
 }
 
-
 void add_node_answer(Answer_list **list, int tag, char *value, int len, int canFree){
 	Answer_list *new = malloc(sizeof(Answer_list));
 	new->tag = tag;

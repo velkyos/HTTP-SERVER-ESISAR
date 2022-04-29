@@ -5,6 +5,8 @@
 	#include <time.h>
 
     char *read_file(char *name, int *len);
+
+	char *read_file_bin(char *name, int *len);
     
     FILE *open_file(char *name, char *option);
 

@@ -1,0 +1,70 @@
+@font-face {
+    font-family: 'poppins';
+    src: url('fonts/poppins.eot');
+    src: url('fonts/poppins.eot?#iefix') format('embedded-opentype'),
+         url('fonts/poppins.woff2') format('woff2'),
+         url('fonts/poppins.woff') format('woff'),
+         url('fonts/poppins.ttf') format('truetype'),
+         url('fonts/poppins.svg#poppins') format('svg');
+
+}
+
+p
+{
+  color: black;
+}
+
+strong
+{
+  color: orangered;
+}
+
+.lstrong
+{
+  color: royalblue;
+  font-style: italic;
+  font-weight: bold;
+}
+
+
+.imageCv
+{
+  margin-left: 0;
+  text-align: center;
+}
+
+.imageCv h1
+{
+  color: darkred;
+  font-size: 1.8em;
+
+}
+
+.formation:hover
+{
+  margin-left: 10px;
+
+}
+
+.formation
+{
+  margin-left: 0px;
+}
+
+a
+{
+  text-decoration: none;
+  color: darkblue;
+}
+
+a
+{
+  font-style: italic;
+}
+
+body
+{
+  margin-left: 2em;
+  font-family: 'poppins',verdana, sans-serif;
+  background-color: #EAEFEF;
+}
