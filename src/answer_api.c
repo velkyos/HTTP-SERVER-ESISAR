@@ -52,9 +52,11 @@ char * concat_answer(Answer_list *answer, int *length){
 	if (temp == NULL) return NULL;
 	else {
 		strcat(message, "\n");
-		strncat(message, temp->value, temp->len);
+		char *t = strstr(message,"\n\n") + 2;
+		memcpy(t, temp->value, temp->len);
 	}
-	
+
+
 	return message;
 }
 

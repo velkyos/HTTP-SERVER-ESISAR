@@ -18,6 +18,8 @@
 	 */
 	char *gmt_time(time_t *t);
 
+	int compare_string(char *chaine1, char *chaine2);
+
 #endif
 
 

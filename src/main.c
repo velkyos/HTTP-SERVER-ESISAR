@@ -17,6 +17,7 @@
 
 #include "syntax_api.h"
 #include "semantic_api.h"
+
 #include "process_api.h"
 #include "request.h"
 #include "config.h"
@@ -32,7 +33,7 @@ char error_message[] = "Code 400 : Bad Request\n";
 char ok_message[] = "Code 200 : OK\n";
 
 message *get_answer(message* request, int index, Config_server *config);
-
+message *get_body_message(message *request);
 
 /* Definition */
 
@@ -40,6 +41,7 @@ int main(int argc, char const *argv[])
 {
 	message *answer = NULL;
 	message *request = NULL;
+
 	Config_server *config = NULL;
 	int n = 0;
 	config = get_config("server.ini");
@@ -67,10 +69,11 @@ int main(int argc, char const *argv[])
 		printf("Request content :\n%.*s\n\n",request->len,request->buf);  
 
 		answer = get_answer(request, n, config);
+
 		if( answer ) {
 			writeDirectClient(answer->clientId, answer->buf, answer->len);
 			endWriteDirectClient(answer->clientId);
-
+			
 			if ( get_connection_status() == PRO_CLOSE)
 			{
 				requestShutdownSocket(answer->clientId);
@@ -92,6 +95,7 @@ int main(int argc, char const *argv[])
 	return 0;
 }
 
+
 message *get_answer(message *request, int index, Config_server *config){
 	message *answer = malloc(sizeof(message));
 
@@ -100,11 +104,15 @@ message *get_answer(message *request, int index, Config_server *config){
 		
 		if (res_parser ) {
 
-			int len = 0;
-			char *answer_buff = process_request(getRootTree(), config, &len);
+			if (semantic(getRootTree()) == 1)
+			{
+				int len = 0;
+				char *answer_buff = process_request(getRootTree(), config, &len);
 			
-			answer->buf= answer_buff;
-			answer->len= len; 
+				answer->buf= answer_buff;
+				answer->len= len; 
+			}
+
 		}
 		else {
 			answer->buf= error_message;

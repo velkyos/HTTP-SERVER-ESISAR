@@ -75,3 +75,15 @@ char *gmt_time(time_t *t){
 
 	return value;
 }
+
+int compare_string(char *chaine1, char *chaine2){
+  int res=1;
+  int i=0;
+  while(chaine1[i]>32 && chaine2[i]>32 && res){ // Les caractères ASCII inferieur 32 sont des caracteres vides (espace, \n...)
+    if(chaine1[i]!=chaine2[i]) res=0;
+    i++;
+  }
+  if(chaine2[i]!='\0') res=0; //La chaine 2 n'est pas complete
+  if(chaine2[i]=='\0' && chaine1[i]>32) res=0; //La chaine 1 contient un la 2 mais pas d'espace ou autre qui suit...
+  return res;
+}

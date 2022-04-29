@@ -59,7 +59,7 @@ void generate_connection_header(derivation_tree *request, Answer_list **answer);
 
 Config_server *config = NULL;
 int connection_status = PRO_UNKNOWN;
-
+FileData *file_data = NULL;
 char *process_request(derivation_tree *request, Config_server *_config, int *anwser_len){
 	config = _config;
 	connection_status = PRO_CLOSE;
@@ -124,8 +124,10 @@ FileData *get_file_data(derivation_tree *request){
 		free(file);
 		return NULL;
 	}
+
 	return file;
 }
+
 
 char *get_file_name(derivation_tree *request){
 	

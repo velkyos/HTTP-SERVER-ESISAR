@@ -12,6 +12,7 @@
 
 	int get_connection_status();
 
+	char *get_body(int *len);
 #endif
 
 
