@@ -47,6 +47,7 @@ FileData *get_file_data();
 char *get_content_type(char *file_name);
 char *get_file_name();
 void copy_to_answer(char *_value, Answer_list **answer);
+void get_http_version();
 
 void generate_age_header(Answer_list **answer);
 void generate_date_header(Answer_list **answer);
@@ -61,6 +62,7 @@ void generate_connection_header(Answer_list **answer);
 
 Config_server *config = NULL;
 int connection_status = PRO_UNKNOWN;
+int current_version = 0;
 
 char *process_request(Config_server *_config, int *anwser_len){
 	config = _config;
@@ -71,6 +73,8 @@ char *process_request(Config_server *_config, int *anwser_len){
 		answer = process_400();
 	}
 	else{
+		get_http_version();
+
 		_Token *method = searchTree( NULL , "method");
 
 		if ( strcasecmp( getElementValue(method->node, NULL), "GET" ))
@@ -149,19 +153,26 @@ FileData *get_file_data(){
 }
 
 char *get_file_name(){
-	
-	_Token *host = searchTree(NULL, "host");
-	int host_len = 0;
-	char *host_val = getElementValue( host->node, &host_len);
-	
+	Website *site = NULL;
+
+	if( current_version == 1){
+		_Token *host = searchTree(NULL, "host");
+		int host_len = 0;
+		char *host_val = getElementValue( host->node, &host_len);
+		
+		find_website(config, host_val, host_len);
+
+		purgeElement(&host);
+	} else {
+		site = config->websites;
+	}
+
+	if (site == NULL) return NULL;
 
 	_Token *target = searchTree(NULL , "absolute-path");
 	int target_len = 0;
 	char *target_val = getElementValue( target->node, &target_len);
 	
-	Website *site = find_website(config, host_val, host_len);
-	if (site == NULL) return NULL;
-
 	char *name = NULL;
 	if( target_len == 1){
 		int len = target_len + site->root_len + site->index_len + 1;
@@ -183,7 +194,6 @@ char *get_file_name(){
 		}
 	}
 
-	purgeElement(&host);
 	purgeElement(&target);
 
 	return name;
@@ -245,6 +255,15 @@ char * get_content_type(char *file_name){
 	}
 	magic_close(magic_cookie);
 	return res;
+}
+
+void get_http_version(){
+	_Token *version = searchTree(NULL, "HTTP-version");
+	int version_len = 0;
+	char *version_val = getElementValue( version->node, &version_len);
+
+	current_version = (compare_string(version_val,"HTTP/1.1")) ? 1 : 0;
+	purgeElement(&version);
 }
 
 /*
@@ -324,7 +343,7 @@ void generate_content_type_header(Answer_list **answer, FileData *file){
 }	
 
 void generate_server_header(Answer_list **answer){
-	add_node_answer( answer, UTI_HEADER, "Server: Esisar Groupe 10", 24, 0);
+	add_node_answer( answer, UTI_HEADER, "Server: Esisar Groupe 9", 24, 0);
 }
 
 void generate_keep_alive_header(Answer_list **answer){
