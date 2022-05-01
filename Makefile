@@ -23,8 +23,9 @@ $(OBJDIR)/%.o: $(FILEDIR)/%.c
 	$(CC) $(FLAGS) -c -o $@ $^
 
 doc:
-	doxygen doxygen-config
+	test -d doc_html || doxygen doxygen-config
 	xdg-open doc_html/index.html
 
 clean:
 	rm -fr $(OBJDIR)/*.o *~ $(BIN)
+	rmdir bin
