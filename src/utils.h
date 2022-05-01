@@ -30,6 +30,14 @@
 	
 	int compare_string(char *chaine1, char *chaine2);
 
+	/**
+	 * @brief Return the value of str without percent encoding
+	 * +   -> ' '
+	 * %20 -> ' '
+	 * %2B -> '+'
+	 */
+	char *percent_encoding(char *str, int len);
+
 #endif
 
 

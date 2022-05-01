@@ -10,9 +10,7 @@
 void recursif_search_tree(derivation_tree *start, char *name, _Token *list);
 void add_token_to_list(_Token *list, derivation_tree *node);
 
-
 derivation_tree *root = NULL;
-
 
 int parser(char *req, int len){
 	root = create_tree_node("HTTP-message",req,len,0); 
@@ -98,7 +96,6 @@ void purgeTree(void *tree){
 	purge_tree_node(root);
 	root = NULL;
 } 
-
 
 void recursif_search_tree(derivation_tree *start, char *name, _Token *list){
 	

@@ -84,3 +84,32 @@ int compare_string(char *chaine1, char *chaine2){
   if(chaine2[i]=='\0' && chaine1[i]>32) res=0; //La chaine 1 contient un la 2 mais pas d'espace ou autre qui suit...
   return res;
 }
+
+char *percent_encoding(char *str, int len){
+	char buffer[3] = "  ";
+	char *res = malloc((len + 1) * sizeof(char));
+	char *temp = res;
+	int index = 0;
+
+	memset(res, '\0', len + 1 );
+
+	while ( index < len)
+	{
+		if( *str == '%'){
+			buffer[0] = *(++str);
+			buffer[1] = *(++str);
+			*temp = (char)strtol(buffer, NULL, 16);
+			index += 2;
+		}
+		else if ( *str == '+'){
+			*temp = ' ';
+		}else{
+			*temp = *str;
+		}
+		temp++;
+		str++;
+		index++;
+	}
+
+	return res;
+}

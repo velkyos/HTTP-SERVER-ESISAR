@@ -235,18 +235,20 @@ char *get_file_name(){
 		int host_len = 0;
 		char *host_val = getElementValue( host->node, &host_len);
 		
-		find_website(config, host_val, host_len);
+		site = find_website(config, host_val, host_len);
 
 		purgeElement(&host);
 	} else {
 		site = config->websites; //If HTTP/1.0 we put the first website in the config file
 	}
-
 	if (site == NULL) return NULL; //We do nothing if the host is wrong or if there is not website in the config file.
 
 	_Token *target = searchTree(NULL , "absolute-path");
 	int target_len = 0;
 	char *target_val = getElementValue( target->node, &target_len);
+	target_val = percent_encoding(target_val, target_len);
+	
+	printf("Nom fichier : %s\n", target_val);
 	
 	char *name = NULL;
 	if( target_len == 1){ //If the target is /, we get the index file in the config
@@ -269,6 +271,7 @@ char *get_file_name(){
 		}
 	}
 
+	free(target_val);
 	purgeElement(&target);
 
 	return name;
