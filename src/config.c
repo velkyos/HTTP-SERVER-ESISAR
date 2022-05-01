@@ -5,7 +5,8 @@
  * @version 1.0
  * @date 2022-04-8
  * 
- * @copyright Copyright (c) 2022
+ * @see Config_server
+ * @see Website
  * 
  * Exemple du fichier config :
  * \code{.ini}

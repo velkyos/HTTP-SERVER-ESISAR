@@ -4,10 +4,20 @@
     #include <stdio.h>
 	#include <time.h>
 
+	/**
+	 * @brief Read a file with mmap.
+	 * 
+	 * @return eturn the content of the file and write it's len into the len param.
+	 */
     char *read_file(char *name, int *len);
-
-	char *read_file_bin(char *name, int *len);
-    
+	
+	/**
+	 * @brief Open a file safelly
+	 * 
+	 * @param name 
+	 * @param option 
+	 * @return The file pointer
+	 */
     FILE *open_file(char *name, char *option);
 
 	/**
@@ -17,7 +27,7 @@
 	 * @return Thu, 28 Apr 2022 00:20:00 GMT  (Len 30 with null character)
 	 */
 	char *gmt_time(time_t *t);
-
+	
 	int compare_string(char *chaine1, char *chaine2);
 
 #endif

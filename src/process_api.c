@@ -1,11 +1,10 @@
 /**
  * @file process_api.c
- * @author ROBERT Benjamin
+ * @author ROBERT Benjamin & PEDER LEO
  * @brief Process of an HTTP request.
  * @version 0.1
  * @date 2022-04-8
  * 
- * @copyright Copyright (c) 2022
  * 
  */
 /* System Includes */
@@ -30,38 +29,110 @@
 
 /* Declaration */
 
+/**
+ * @brief A simple structure to store information about a file.
+ * 
+ */
 typedef struct str_fileData{
 	char *name;
 	char *data;
 	int len;
 } FileData;
-
+/**
+ * @brief Function who process HEAD and GET methods.
+ * @see Answer_list
+ * 
+ * @param isGet 'Boolean' to tell if it's a GET or an HEAD method.
+ * @return Return an linked list with all the parts of the answer.
+ */
 Answer_list *process_head(int isGet);
-Answer_list *process_400();
-
+/**
+ * @brief Function who process Bad request.
+ * @see Answer_list
+ * 
+ * @param error_code The char * of the status line.
+ * @return Return an linked list with all the parts of the answer.
+ */
+Answer_list *process_errors(char *error_code);
+/**
+ * @brief Generate the status and copy it into the answer_list.
+ * 
+ * @param answer The adress of the linked list.
+ * @param file The adress of the information about the file.
+ */
 void generate_status(Answer_list **answer, FileData *file);
+/**
+ * @brief Generate header fields and copy it into the answer_list.
+ * 
+ * @param answer The adress of the linked list.
+ * @param file The adress of the information about the file.
+ */
 void generate_header_fields(Answer_list **answer, FileData *file);
+/**
+ * @brief Generate the body and copy it into the answer_list.
+ * 
+ * @param answer The adress of the linked list.
+ * @param file The adress of the information about the file.
+ */
 void generate_body(Answer_list **answer, FileData *file);
-
+/**
+ * @brief Retrieve file data.
+ * @see get_file_name()
+ * 
+ * @return Return the Name, length and the data of the file.
+ */
 FileData *get_file_data();
+/**
+ * @brief Use magiclib to get the type of the file the client want to access.
+ * 
+ * @param file_name 
+ * @return Return the type in the HTTP format.
+ */
 char *get_content_type(char *file_name);
+/**
+ * @brief Get the file name (path) using the request and the config file to access the correct one.
+ * @see Config_server
+ * @see Website
+ * 
+ * @return Return the Name of the file.
+ */
 char *get_file_name();
+/**
+ * @brief A utility function who job is to copy the _value into a new allocated char* and insert the resulting one into the answer_list.
+ * 
+ * @param _value The text you want to copy.
+ * @param answer The adress of the linked list.
+ */
 void copy_to_answer(char *_value, Answer_list **answer);
+/** @brief Get the http_version used by the client.*/
 void get_http_version();
-
+/** @brief Generate the age header (Value of 0 because no cache)*/
 void generate_age_header(Answer_list **answer);
+/** @brief Generate the date header with the correct format.*/
 void generate_date_header(Answer_list **answer);
+/** @brief Generate the allow header with GET and HEAD*/
 void generate_Allow_header(Answer_list **answer);
+/** @brief Generate the content length header.*/
 void generate_content_length_header(Answer_list **answer, FileData *file);
+/** 
+ * @brief Generate the content type header.
+ * @see get_content_type()
+ * */
 void generate_content_type_header(Answer_list **answer, FileData *file);
+/** @brief Generate the server header.*/
 void generate_server_header(Answer_list **purge_answer);
+/** @brief Generate the Keep Alive header.*/
 void generate_keep_alive_header(Answer_list **answer);
+/** @brief Generate the connection header header.*/
 void generate_connection_header(Answer_list **answer);
 
 /* Definition */
 
+ /** The config file*/
 Config_server *config = NULL;
+ /** Current connection_status*/
 int connection_status = PRO_UNKNOWN;
+ /** Current HTTP_version of the client */
 int current_version = 0;
 
 char *process_request(Config_server *_config, int *anwser_len){
@@ -69,10 +140,10 @@ char *process_request(Config_server *_config, int *anwser_len){
 	connection_status = PRO_CLOSE;
     Answer_list *answer = NULL;
 	
-	if ( getRootTree() == NULL){
-		answer = process_400();
+	if ( getRootTree() == NULL){ //If syntax or semantic is not valid
+		answer = process_errors(C_400);
 	}
-	else{
+	else{ //If syntax and semantic is valid
 		get_http_version();
 
 		_Token *method = searchTree( NULL , "method");
@@ -85,8 +156,8 @@ char *process_request(Config_server *_config, int *anwser_len){
 		{
 			answer = process_head(0);
 		}
-		else {
-			add_node_answer( &answer, UTI_STATUS, C_501, strlen(C_501), 0);
+		else { //Not implemented method
+			answer = process_errors(C_501);
 		}
 		purgeElement(&method);
 	}
@@ -97,14 +168,18 @@ char *process_request(Config_server *_config, int *anwser_len){
 	return answer_text;
 }
 
-Answer_list *process_400(){
+Answer_list *process_errors(char *error_code){
 	Answer_list *answer = NULL;
 
-	generate_status(&answer, NULL);
+	//Add the status line
+	add_node_answer( &answer, UTI_STATUS, error_code, strlen(error_code), 0);
+
+	//Add headers
 	generate_date_header(&answer);
 	generate_content_length_header(&answer, NULL);
 	generate_server_header(&answer);
-
+	
+	//Add body
 	generate_body(&answer, NULL);
 
 	return answer;
@@ -155,7 +230,7 @@ FileData *get_file_data(){
 char *get_file_name(){
 	Website *site = NULL;
 
-	if( current_version == 1){
+	if( current_version == 1){ //We check the host header only in HTTP/1.1
 		_Token *host = searchTree(NULL, "host");
 		int host_len = 0;
 		char *host_val = getElementValue( host->node, &host_len);
@@ -164,17 +239,17 @@ char *get_file_name(){
 
 		purgeElement(&host);
 	} else {
-		site = config->websites;
+		site = config->websites; //If HTTP/1.0 we put the first website in the config file
 	}
 
-	if (site == NULL) return NULL;
+	if (site == NULL) return NULL; //We do nothing if the host is wrong or if there is not website in the config file.
 
 	_Token *target = searchTree(NULL , "absolute-path");
 	int target_len = 0;
 	char *target_val = getElementValue( target->node, &target_len);
 	
 	char *name = NULL;
-	if( target_len == 1){
+	if( target_len == 1){ //If the target is /, we get the index file in the config
 		int len = target_len + site->root_len + site->index_len + 1;
 		name = malloc(len);
 		if (name){
@@ -184,7 +259,7 @@ char *get_file_name(){
 			strcat(name, site->index);
 		}
 	}
-	else{
+	else{ 
 		int len = target_len + site->root_len + 1;
 		name = malloc(len);
 		if (name){
@@ -204,12 +279,14 @@ int get_connection_status(){
 }
 
 void copy_to_answer(char *_value, Answer_list **answer){
-	char *value = malloc(strlen(_value) + 1);
 	int len = strlen(_value);
-	memset(value, '\0', len + 1);
+	char *value = malloc(len + 1); 
+	
+	memset(value, '\0', len + 1); //We fill all with 0
+
 	if(value){
-		memcpy(value, _value, len + 1);
-		add_node_answer( answer, UTI_HEADER, value, strlen(value), UTI_CANFREE);
+		memcpy(value, _value, len + 1); //Copy the _value
+		add_node_answer( answer, UTI_HEADER, value, len, UTI_CANFREE);
 	}
 }
 
@@ -271,10 +348,7 @@ Generation of response
 */
 
 void generate_status(Answer_list **answer, FileData *file){
-	if(getRootTree() == NULL){
-		add_node_answer( answer, UTI_STATUS, C_400, strlen(C_400), 0);
-	}
-	else if(file == NULL) {
+	if(file == NULL) {
 		add_node_answer( answer, UTI_STATUS, C_404, strlen(C_404), 0);
 	}
 	else{
@@ -312,6 +386,7 @@ void generate_date_header(Answer_list **answer){
 	time(&t);
 
 	char *value_t = gmt_time(&t);
+	
 	char value[50] = "";
 	sprintf(value, "Date: %s", value_t);
 	
