@@ -82,15 +82,16 @@ void purge_linked_children(linked_child **main_list){
 }
 
 void purge_tree_node(derivation_tree *node){
-	if ( T_DEBUG ) printf("Purge : %s\n", node->tag);
+	if(node){
+		if ( T_DEBUG ) printf("Purge : %s\n", node->tag);
+		
+		purge_linked_children(&(node->children));
 
-	purge_linked_children(&(node->children));
-
-	node->tag = NULL;
-	node->value = NULL;
-	node->children = NULL;
-	free(node);
-
+		node->tag = NULL;
+		node->value = NULL;
+		node->children = NULL;
+		free(node);
+	}
 }
 
 void print_tree(FILE *output, derivation_tree *tree){

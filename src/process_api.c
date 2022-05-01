@@ -26,6 +26,7 @@
 #define C_200 "HTTP/1.1 200 OK"
 #define C_404 "HTTP/1.1 404 Not Found"
 #define C_501 "HTTP/1.1 501 Not Implemented"
+#define C_400 "HTTP/1.1 400 Bad Request"
 
 /* Declaration */
 
@@ -35,15 +36,16 @@ typedef struct str_fileData{
 	int len;
 } FileData;
 
-Answer_list *process_head(derivation_tree *request, int isGet);
+Answer_list *process_head(int isGet);
+Answer_list *process_400();
 
-void generate_status(derivation_tree *request, Answer_list **answer, FileData *file);
-void generate_header_fields(derivation_tree *request, Answer_list **answer, FileData *file);
+void generate_status(Answer_list **answer, FileData *file);
+void generate_header_fields(Answer_list **answer, FileData *file);
 void generate_body(Answer_list **answer, FileData *file);
 
-FileData *get_file_data(derivation_tree *request);
+FileData *get_file_data();
 char *get_content_type(char *file_name);
-char *get_file_name(derivation_tree *request);
+char *get_file_name();
 void copy_to_answer(char *_value, Answer_list **answer);
 
 void generate_age_header(Answer_list **answer);
@@ -52,50 +54,68 @@ void generate_Allow_header(Answer_list **answer);
 void generate_content_length_header(Answer_list **answer, FileData *file);
 void generate_content_type_header(Answer_list **answer, FileData *file);
 void generate_server_header(Answer_list **purge_answer);
-void generate_keep_alive_header(derivation_tree *request, Answer_list **answer);
-void generate_connection_header(derivation_tree *request, Answer_list **answer);
+void generate_keep_alive_header(Answer_list **answer);
+void generate_connection_header(Answer_list **answer);
 
 /* Definition */
 
 Config_server *config = NULL;
 int connection_status = PRO_UNKNOWN;
-FileData *file_data = NULL;
-char *process_request(derivation_tree *request, Config_server *_config, int *anwser_len){
+
+char *process_request(Config_server *_config, int *anwser_len){
 	config = _config;
 	connection_status = PRO_CLOSE;
     Answer_list *answer = NULL;
+	
+	if ( getRootTree() == NULL){
+		answer = process_400();
+	}
+	else{
+		_Token *method = searchTree( NULL , "method");
 
-    _Token *method = searchTree( request, "method");
-
-    if ( strcasecmp( getElementValue(method->node, NULL), "GET" ))
-    {
-        answer = process_head(request, 1);
-    }
-	else if ( strcasecmp( getElementValue(method->node, NULL), "HEAD" ))
-    {
-        answer = process_head(request, 0);
-    }
-    else {
-		add_node_answer( &answer, UTI_STATUS, C_501, strlen(C_501), 0);
-    }
+		if ( strcasecmp( getElementValue(method->node, NULL), "GET" ))
+		{
+			answer = process_head(1);
+		}
+		else if ( strcasecmp( getElementValue(method->node, NULL), "HEAD" ))
+		{
+			answer = process_head(0);
+		}
+		else {
+			add_node_answer( &answer, UTI_STATUS, C_501, strlen(C_501), 0);
+		}
+		purgeElement(&method);
+	}
 
     char * answer_text = concat_answer(answer, anwser_len);
-
 	purge_answer(&answer);
-	purgeElement(&method);
-
+	
 	return answer_text;
 }
 
-Answer_list *process_head(derivation_tree *request, int isGet){
+Answer_list *process_400(){
 	Answer_list *answer = NULL;
-	FileData *file = get_file_data(request);
-	
-	generate_status(request, &answer, file);
 
-	generate_header_fields(request, &answer, file);
+	generate_status(&answer, NULL);
+	generate_date_header(&answer);
+	generate_content_length_header(&answer, NULL);
+	generate_server_header(&answer);
+
+	generate_body(&answer, NULL);
+
+	return answer;
+}
+
+Answer_list *process_head(int isGet){
+	Answer_list *answer = NULL;
+	FileData *file = get_file_data();
+	
+	generate_status(&answer, file);
+
+	generate_header_fields(&answer, file);
 
 	if ( isGet == 1) generate_body(&answer, file);
+	else generate_body(&answer, NULL);
 
 	if ( file != NULL){
 		free(file->name);
@@ -105,12 +125,12 @@ Answer_list *process_head(derivation_tree *request, int isGet){
 	return answer;
 }
 
-FileData *get_file_data(derivation_tree *request){
+FileData *get_file_data(){
 	FileData *file = malloc(sizeof(FileData));
 	file->name = NULL;
 	file->data = NULL;
 
-	file->name = get_file_name(request);
+	file->name = get_file_name();
 
 	if(file->name == NULL) {
 		free(file);
@@ -128,14 +148,14 @@ FileData *get_file_data(derivation_tree *request){
 	return file;
 }
 
-char *get_file_name(derivation_tree *request){
+char *get_file_name(){
 	
-	_Token *host = searchTree(request, "host");
+	_Token *host = searchTree(NULL, "host");
 	int host_len = 0;
 	char *host_val = getElementValue( host->node, &host_len);
 	
 
-	_Token *target = searchTree(request, "absolute-path");
+	_Token *target = searchTree(NULL , "absolute-path");
 	int target_len = 0;
 	char *target_val = getElementValue( target->node, &target_len);
 	
@@ -231,8 +251,11 @@ char * get_content_type(char *file_name){
 Generation of response
 */
 
-void generate_status(derivation_tree *request, Answer_list **answer, FileData *file){
-	if(file == NULL) {
+void generate_status(Answer_list **answer, FileData *file){
+	if(getRootTree() == NULL){
+		add_node_answer( answer, UTI_STATUS, C_400, strlen(C_400), 0);
+	}
+	else if(file == NULL) {
 		add_node_answer( answer, UTI_STATUS, C_404, strlen(C_404), 0);
 	}
 	else{
@@ -240,14 +263,14 @@ void generate_status(derivation_tree *request, Answer_list **answer, FileData *f
 	}
 }
 
-void generate_header_fields(derivation_tree *request, Answer_list **answer, FileData *file){
+void generate_header_fields(Answer_list **answer, FileData *file){
 	if(file != NULL){
 		generate_content_type_header(answer, file);
 	}
 	generate_content_length_header(answer, file);
 	generate_age_header(answer);
 	generate_server_header(answer);
-	generate_connection_header(request, answer);
+	generate_connection_header(answer);
 	generate_date_header(answer);
 	generate_Allow_header(answer);
 }
@@ -298,31 +321,29 @@ void generate_content_type_header(Answer_list **answer, FileData *file){
 
 	free(type);
 	copy_to_answer(value, answer);
-
-	//add_node_answer( answer, UTI_HEADER, "Content-Type: image/jpeg", 24, 0);
 }	
 
 void generate_server_header(Answer_list **answer){
 	add_node_answer( answer, UTI_HEADER, "Server: Esisar Groupe 10", 24, 0);
 }
 
-void generate_keep_alive_header(derivation_tree *request, Answer_list **answer){
+void generate_keep_alive_header(Answer_list **answer){
 	char value[50] = "";
 	sprintf(value, "Keep-Alive: timeout=%d, max=%d", config->keepTimeOut, config->keepMax);
 
 	copy_to_answer(value, answer);
 }
 
-void generate_connection_header(derivation_tree *request, Answer_list **answer){
+void generate_connection_header(Answer_list **answer){
 	char value[50] = "";
 
-	_Token *tok = searchTree(request, "Connection");
+	_Token *tok = searchTree(NULL, "Connection");
 	if( tok != NULL){
 		int tok_len;
 		char *tok_val = getElementValue(tok->node, &tok_len);
 
 		if(strncmp("keep-alive", tok_val, tok_len) == 0){
-			generate_keep_alive_header(request, answer);
+			generate_keep_alive_header(answer);
 			connection_status = PRO_KEEP_ALIVE;
 		}else if (strncmp("close", tok_val, tok_len) == 0){
 			connection_status = PRO_CLOSE;

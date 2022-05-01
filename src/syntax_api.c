@@ -30,6 +30,11 @@ int parser(char *req, int len){
 		//printf("Message Body : %s\n", body->value);
 		purgeElement(&t);
 	}
+	if( n == NOT_VALID) {
+		purge_tree_node(root);
+		root = NULL;
+	}
+	
 	return (n != NOT_VALID) ? n : 0;
 }
 

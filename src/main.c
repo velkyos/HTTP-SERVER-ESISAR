@@ -29,9 +29,6 @@
 
 /* Declaration */
 
-char error_message[] = "Code 400 : Bad Request\n";
-char ok_message[] = "Code 200 : OK\n";
-
 message *get_answer(message* request, int index, Config_server *config);
 message *get_body_message(message *request);
 
@@ -100,24 +97,15 @@ message *get_answer(message *request, int index, Config_server *config){
 	message *answer = malloc(sizeof(message));
 
 	if (answer){
-		int res_parser = parser(request->buf, request->len);
+		parser(request->buf, request->len);
 		
-		if (res_parser ) {
+		if(semantic() == 0) purgeTree(getRootTree);
 
-			if (semantic(getRootTree()) == 1)
-			{
-				int len = 0;
-				char *answer_buff = process_request(getRootTree(), config, &len);
+		int len = 0;
+		char *answer_buff = process_request(config, &len);
 			
-				answer->buf= answer_buff;
-				answer->len= len; 
-			}
-
-		}
-		else {
-			answer->buf= error_message;
-			answer->len= strlen(error_message); 
-		}
+		answer->buf= answer_buff;
+		answer->len= len; 
 		answer->clientId = request->clientId;
 		purgeTree(getRootTree());
 	}

@@ -5,10 +5,9 @@
   /**
 	 * @brief Fonction qui verifie la sémantique de la requete HTTP
 	 *
-	 * @param root racine de l'arbre
 	 * @return 1 si la semantique est correcte 0 sinon
 	 */
-  int semantic(void *root);
+  int semantic();
 
 
   /**
@@ -31,25 +30,22 @@
   /**
    * @brief Fonction qui verifie que chaque header est unique
    *
-   * @param root racine de l'arbre
    * @return 1 si c'est le cas 0 sinon
    */
-  int header_unique(void *root);
+  int header_unique();
 
   /**
    * @brief Fonction qui verifie le champ connection-option est bien close ou keep-alive
    *
-   * @param root racine de l'arbre
    * @return 1 si c'est le cas 0 sinon
    */
-  int connection(void *root);
+  int connection();
 
   /**
    * @brief Fonction qui verifie le champ Content-length et Transfer-Encoding ne sont pas present en meme temps
    *
-   * @param root racine de l'arbre
    * @return 1 si c'est le cas 0 sinon
    */
-  int content_length(void *root);
+  int content_length();
 
 #endif

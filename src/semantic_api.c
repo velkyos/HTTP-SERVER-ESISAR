@@ -37,26 +37,27 @@
 #define S_CONNECTION_NB 2
 
 
-int semantic(void *root){
+int semantic(){
+  if( getRootTree() == NULL) return 0;
 
   _Token *methode=NULL, *version=NULL, *host=NULL;
   char *HTTP_version,*Host, *Method;
   int l,resultat_sem=S_VALID;
 
   /*VERIFICATION METHODE*/
-  methode=searchTree(root,"method");
+  methode=searchTree(NULL,"method");
   Method=(methode!=NULL)?getElementValue(methode->node,&l):NULL;
   resultat_sem+=method(Method);
   //printf("Method valide ? %d\n",method(Method));
   purgeElement(&methode);
 
   /*VERIFICATION HEADER */
-  resultat_sem+=header_unique(root);
-  //printf("Header unique valide? %d\n",header_unique(root));
+  resultat_sem+=header_unique();
+  //printf("Header unique valide? %d\n",header_unique());
 
   /* VERIFICATION DE LA VERSION ET HEADER HOST*/
-  version=searchTree(root,"HTTP-version");
-  host=searchTree(root,"Host");
+  version=searchTree(NULL,"HTTP-version");
+  host=searchTree(NULL,"Host");
 
   HTTP_version=(version!=NULL)?getElementValue(version->node,&l):NULL;
   Host=(host!=NULL)?getElementValue(host->node,&l):NULL;
@@ -66,12 +67,12 @@ int semantic(void *root){
   purgeElement(&host);
 
   /*HEADER CONNECTION*/
-  resultat_sem+=connection(root);
-  //printf("Connection-header valide ? %d\n",connection(root));
+  resultat_sem+=connection();
+  //printf("Connection-header valide ? %d\n",connection());
 
   /*CONTENT-LENGH HEADER*/
-  resultat_sem+=content_length(root);
-  //printf("Content-Length valid ? %d\n",content_length(root));
+  resultat_sem+=content_length();
+  //printf("Content-Length valid ? %d\n",content_length());
 
   resultat_sem=(!resultat_sem)?1:0;
   //printf("\nresultat final %d\n",resultat_sem);
@@ -100,12 +101,12 @@ int method(char *method){
   return res;
 }
 
-int header_unique(void *root){
+int header_unique(){
   int res=S_VALID,i=0,nb_header=0;
   char *header_dispo[]=S_HEADER;
   _Token *current_header, *header;
   while(!res && i<S_HEADER_NB){
-    header=searchTree(root,header_dispo[i]);
+    header=searchTree(NULL,header_dispo[i]);
     current_header=header;
     while(current_header!=NULL){ //Pour chaque header present dans la requete
       current_header=current_header->next;
@@ -120,10 +121,10 @@ int header_unique(void *root){
 }
 
 
-int connection(void *root){
+int connection(){
   int i=0,res=S_NON_VALID,l;
-  _Token *connect=searchTree(root,"connection-option");
-  _Token *header_connec=searchTree(root,"Connection-header");
+  _Token *connect=searchTree(NULL,"connection-option");
+  _Token *header_connec=searchTree(NULL,"Connection-header");
   if(header_connec==NULL) return S_VALID; //Si l'header est pas present = C'est bon
   char *connection_dispo[]=S_CONNECTION;
   while(res && i<S_CONNECTION_NB){
@@ -135,9 +136,9 @@ int connection(void *root){
   return res;
 }
 
-int content_length(void *root){
-  _Token * content_length=searchTree(root,"Content-Length");
-  _Token * transfert_encoding=searchTree(root,"Transfer-Encoding");
+int content_length(){
+  _Token * content_length=searchTree(NULL,"Content-Length");
+  _Token * transfert_encoding=searchTree(NULL,"Transfer-Encoding");
   int res=content_length!=NULL && transfert_encoding!=NULL;
   purgeElement(&content_length);
   purgeElement(&transfert_encoding);
