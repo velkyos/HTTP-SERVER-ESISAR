@@ -128,7 +128,6 @@ FileData *get_file_data(derivation_tree *request){
 	return file;
 }
 
-
 char *get_file_name(derivation_tree *request){
 	
 	_Token *host = searchTree(request, "host");
@@ -293,9 +292,11 @@ void generate_content_length_header(Answer_list **answer, FileData *file){
 }
 
 void generate_content_type_header(Answer_list **answer, FileData *file){
+	char *type = get_content_type( file->name);
 	char value[80] = "";
-	sprintf(value, "Content-Type: %s", get_content_type( file->name));
+	sprintf(value, "Content-Type: %s", type);
 
+	free(type);
 	copy_to_answer(value, answer);
 
 	//add_node_answer( answer, UTI_HEADER, "Content-Type: image/jpeg", 24, 0);

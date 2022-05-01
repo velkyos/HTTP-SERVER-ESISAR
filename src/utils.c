@@ -17,6 +17,7 @@
 #include <errno.h>
 #include <sys/mman.h>
 #include <time.h>
+#include <string.h>
 
 
 char *read_file(char *name, int *len){
@@ -32,11 +33,8 @@ char *read_file(char *name, int *len){
     }
     if (fstat(file, &st) == -1)
         return NULL;
-    /*if ((addr=mmap(NULL,st.st_size,PROT_WRITE | PROT_READ,MAP_PRIVATE, file, 0)) == NULL )
-        return NULL;*/
-
-	addr = malloc(st.st_size);
-	if(addr) read(file, addr, st.st_size);
+    if ((addr=mmap(NULL,st.st_size,PROT_WRITE | PROT_READ,MAP_PRIVATE, file, 0)) == NULL )
+        return NULL;
 
     if (len) *len = st.st_size;
 
@@ -70,6 +68,7 @@ char *gmt_time(time_t *t){
 	struct tm *g = gmtime(t);
 
 	char *value = malloc(30* sizeof(char));
+	memset(value, '\0', 30);
 
 	sprintf( value, "%s, %.2d %s %.4d %.2d:%.2d:%.2d GMT", days[g->tm_wday - 1], g->tm_mday, months[g->tm_mon], 1900 + g->tm_year, g->tm_hour, g->tm_min, g->tm_sec);
 

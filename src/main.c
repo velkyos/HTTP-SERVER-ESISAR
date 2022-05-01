@@ -47,7 +47,7 @@ int main(int argc, char const *argv[])
 	config = get_config("server.ini");
 
 	if ( config == NULL){
-		printf("Config file not found, stopping the server and generating a default one\n");
+		printf("Config file not found or with errors, stopping the server and generating a default one\n");
 		generate_config_file();
 		exit(EXIT_FAILURE);
 	}

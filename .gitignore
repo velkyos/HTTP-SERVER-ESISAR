@@ -57,6 +57,7 @@ dkms.conf
 
 documents/
 doc_html/
+src_html/
 
 http-server
 server.ini
