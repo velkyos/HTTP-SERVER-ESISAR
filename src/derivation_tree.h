@@ -1,6 +1,7 @@
 #ifndef DERIVATION_TREE_H
 	#define DERIVATION_TREE_H
 
+	#include <stdio.h>
 
 	/* Declaration */
 
@@ -13,8 +14,8 @@
 	 */
 	struct st_derivation_tree
 	{
-		const char *tag;
-		const char *value;
+		char *tag;
+		char *value;
 		int value_length;
 		int tree_level;
 		linked_child *children;
@@ -74,5 +75,12 @@
 	 * @param main_list 
 	 */
 	void purge_linked_children(linked_child **main_list);
+
+	/**
+	 * @brief Print the tree to a file
+	 * @param output File or STD_OUT
+	 * @param tree Pointer to the tree you want to display
+	 */
+	void print_tree(FILE *output, derivation_tree *tree);
 
 #endif

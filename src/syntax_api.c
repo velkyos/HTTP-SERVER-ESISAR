@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include "api.h"
+#include "syntax_api.h"
 
 #include "syntax_check.h"
 
@@ -10,10 +10,9 @@
 void recursif_search_tree(derivation_tree *start, char *name, _Token *list);
 void add_token_to_list(_Token *list, derivation_tree *node);
 
-
 derivation_tree *root = NULL;
 
-int parseur(char *req, int len){
+int parser(char *req, int len){
 	root = create_tree_node("HTTP-message",req,len,0); 
 	abnf_rule *rule = get_abnf_rule("HTTP-message", 12); 
 
@@ -23,9 +22,17 @@ int parseur(char *req, int len){
 	//If the request didn't have a message-body, we put -1 in value_length (The searchTree function will not get this node).
 	if (n != NOT_VALID ) 
 	{
-		derivation_tree *body = (derivation_tree *)searchTree(root, "message-body")->node;
+		_Token *t = searchTree(root, "message-body");
+		derivation_tree *body = (derivation_tree *)t->node;
 		body->value_length = (n != NOT_VALID && len - n != 0) ? len - n : NOT_VALID;
+		//printf("Message Body : %s\n", body->value);
+		purgeElement(&t);
 	}
+	if( n == NOT_VALID) {
+		purge_tree_node(root);
+		root = NULL;
+	}
+	
 	return (n != NOT_VALID) ? n : 0;
 }
 
@@ -47,7 +54,7 @@ _Token *searchTree(void *start,char *name){
 	if (list->node == NULL && list->next == NULL)
 	{
 		free(list);
-		printf("Didn't Find any %s !\n", name);
+		//printf("Didn't Find any %s !\n", name);
 		return NULL;
 	}
 	return list;
@@ -85,11 +92,10 @@ void purgeElement(_Token **r){
 
 }
 
-void purgeTree(void *root){
+void purgeTree(void *tree){
 	purge_tree_node(root);
 	root = NULL;
 } 
-
 
 void recursif_search_tree(derivation_tree *start, char *name, _Token *list){
 	

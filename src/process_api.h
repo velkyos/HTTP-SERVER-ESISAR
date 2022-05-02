@@ -1,0 +1,17 @@
+#ifndef PROCESS_API_H
+    #define PROCESS_API_H
+
+	#include "config.h"
+
+	#define PRO_UNKNOWN 0
+	#define PRO_CLOSE 1
+	#define PRO_KEEP_ALIVE 2
+
+    char *process_request(Config_server *_config, int *anwser_len);
+
+	int get_connection_status();
+
+	char *get_body(int *len);
+#endif
+
+

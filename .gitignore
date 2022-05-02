@@ -52,9 +52,17 @@ Mkfile.old
 dkms.conf
 
 #Other
-documents/
-documentation/
-http-parser
-.vscode/settings.json
 *.txt
-httpparser
+.vscode/settings.json
+
+documents/
+doc_html/
+src_html/
+
+http-server
+server.ini
+!librequest.so
+
+
+
+
