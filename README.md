@@ -1,6 +1,8 @@
 # HTTP SERVER
 #### _ MANDON ANAEL | PEDER LEO | ROBERT BENJAMIN _
 
+ # Version 0.6
+ - A basic HTTP server (1.0 and 1.1) capable of hosting multiple websites. (GET/HEAD/POST not php)
  # Version 0.5
  - A basic HTTP server (1.0 and 1.1) capable of hosting multiple websites. (GET and HEAD only)
  # Version 0.3

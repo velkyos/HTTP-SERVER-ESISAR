@@ -14,7 +14,7 @@
     /**
   	 * @brief Write a file with pwrite.
   	 *
-  	 * @return return the number of bytes written in the file
+  	 * @return Return 2 if file as been created, 0 if the file as been replaced and 1 for errors
   	 */
     int write_file(char *name, char *data, int len);
 	/**

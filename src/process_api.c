@@ -1,8 +1,8 @@
 /**
  * @file process_api.c
- * @author ROBERT Benjamin & PEDER Leo
+ * @author ROBERT Benjamin & PEDER Leo & MANDON Anaël
  * @brief Process of an HTTP request.
- * @version 0.1
+ * @version 0.6
  * @date 2022-04-8
  *
  *
@@ -92,10 +92,10 @@ void generate_body(Answer_list **answer, FileData *file);
  */
 FileData *get_file_data();
 /**
- * @brief Retrieve file data.
+ * @brief Write data to file.
  * @see get_file_name()
  *
- * @return Return -1 if can not write in the file.
+ * @return Return 2 if file as been created, 0 if the file as been replaced and 1 for errors
  */
 int push_file_data();
 /**
