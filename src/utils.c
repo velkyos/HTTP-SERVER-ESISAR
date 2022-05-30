@@ -47,7 +47,7 @@ int write_file(char *name, char *data, int len){
 
   if (stat(name, &st) == -1) res=2;
 
-  file=open(name,O_RDWR);
+  file=open(name,O_RDWR | O_CREAT);
 
   if ( file == -1 ) {
       perror("open");

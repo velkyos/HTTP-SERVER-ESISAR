@@ -174,7 +174,7 @@ char *process_request(Config_server *_config, int *anwser_len){
 		}
 		else if (strncmp( getElementValue(method->node, NULL), "POST" ,4)  == 0)
 		{
-			answer= process_head(2);
+			answer= process_post();
 		}
 		else { //Not implemented method
 			answer = process_errors(C_501);
@@ -209,6 +209,8 @@ Answer_list *process_head(int isGet){
 	Answer_list *answer = NULL;
 	FileData *file = get_file_data();
 
+	if(file == NULL) return process_errors(C_404);
+
 	generate_status(&answer, file==NULL);
 
 	generate_header_fields(&answer, file);
@@ -229,11 +231,14 @@ Answer_list *process_head(int isGet){
 
 Answer_list *process_post(){
 	Answer_list *answer = NULL;
-	int code;
-	if((code=push_file_data())==-1){
+	int code = push_file_data();
+
+	if( code == -1 ){
 		return process_errors(C_404);
 	}else{
 		generate_status(&answer,code);
+		generate_header_fields(&answer, NULL);
+		generate_body(&answer, NULL);
 	}
 	return answer;
 }
@@ -291,7 +296,6 @@ int push_file_data(){
 
 	return code;
 }
-
 
 
 char *get_file_name(){
