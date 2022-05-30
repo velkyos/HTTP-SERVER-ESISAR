@@ -20,6 +20,8 @@
  * - Documentation files ar in `/doc_html`
  * 
  * \section update Versions
+ * \subsection V06 0.6
+ * - A basic HTTP server (1.0 and 1.1) capable of hosting multiple websites. (GET/HEAD/POST not php)
  * \subsection V05 0.5
  * - A basic HTTP server (1.0 and 1.1) capable of hosting multiple websites. (GET and HEAD only)
  * \subsection V03 0.3

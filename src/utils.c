@@ -4,11 +4,11 @@
  * @brief Utility functions.
  * @version 0.1
  * @date 2022-04-8
- * 
+ *
  */
 
 #include "utils.h"
-#include <stdlib.h> 
+#include <stdlib.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -37,10 +37,28 @@ char *read_file(char *name, int *len){
     if (len) *len = st.st_size;
 
     close(file);
-    
+
     return addr;
 }
 
+int write_file(char *name, char *data, int len){
+  int file,res=0;
+  struct stat st;
+
+  if (stat(name, &st) == -1) res=2;
+
+  file=open(name,O_RDWR | O_CREAT);
+
+  if ( file == -1 ) {
+      perror("open");
+      return 1;
+  }
+  if(pwrite(file,&data,len,0)==-1)
+      return 1;
+
+  close(file);
+  return res;
+}
 
 
 
@@ -48,6 +66,7 @@ FILE *open_file(char *name, char *option){
     FILE* file = fopen(name, option);
 	if (file == NULL){
 		perror("open");
+    return NULL;
 	}
 	return file;
 }
