@@ -10,7 +10,7 @@
 	<tab type="user" url="@ref syntax_check.c" title="Parser"/>
 	<tab type="user" url="@ref semantic_api.c" title="Semantic"/>
 	<tab type="user" url="@ref process_api.c" title="Process Request"/>
-	<tab type="user" url="@ref answer_api.c" title="Answer Builder"/>
+	<tab type="user" url="@ref answer_api.h" title="Answer Builder"/>
 
   </navindex>
 
@@ -106,11 +106,11 @@
 
   <!-- Layout definition for a file page -->
   <file>
-    <detaileddescription title=""/>
+    <detaileddescription title="Description"/>
     <includes visible="$SHOW_INCLUDE_FILES"/>
     <includegraph visible="$INCLUDE_GRAPH"/>
     <includedbygraph visible="$INCLUDED_BY_GRAPH"/>
-    <sourcelink visible="yes"/>
+
     <memberdecl>
       <interfaces visible="yes" title=""/>
       <classes visible="yes" title=""/>

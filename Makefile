@@ -22,8 +22,8 @@ $(OBJDIR)/main.o: $(FILEDIR)/main.c
 $(OBJDIR)/%.o: $(FILEDIR)/%.c
 	$(CC) $(FLAGS) -c -o $@ $^
 
-doc:
-	test -d doc_html || doxygen doxygen-config
+doc: 
+	doxygen doxygen-config
 	xdg-open doc_html/index.html
 
 clean:
