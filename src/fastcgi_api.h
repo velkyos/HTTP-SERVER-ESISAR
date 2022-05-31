@@ -1,7 +1,9 @@
 #ifndef FASTCGI_API_H
     #define FASTCGI_API_H
 
-	void fastcgi_request(char *file_name, int request_id, int port, int isPost);
+	#include "config.h"
+
+	void fastcgi_request(char *file_name, int request_id, int port, Website *_site, int isPost);
 
 	char * fastcgi_get_body(int *len);
 

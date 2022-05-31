@@ -104,14 +104,8 @@ FileData * push_file_data(char *name);
  * @return Return the type in the HTTP format.
  */
 char *get_content_type(char *file_name);
-/**
- * @brief Get the file name (path) using the request and the config file to access the correct one.
- * @see Config_server
- * @see Website
- *
- * @return Return the Name of the file.
- */
-char *get_file_name();
+
+char *get_complete_path();
 /**
  * @brief A utility function who job is to copy the _value into a new allocated char* and insert the resulting one into the answer_list.
  *
@@ -141,6 +135,8 @@ void generate_keep_alive_header(Answer_list **answer);
 /** @brief Generate the connection header header.*/
 void generate_connection_header(Answer_list **answer);
 
+void get_current_website();
+
 /* Definition */
 
  /** The config file */
@@ -151,6 +147,7 @@ int connection_status = PRO_UNKNOWN;
 int current_version = 0;
  /** Is the current request a request to the php server */
 int is_php = 0;
+Website *c_site = NULL;
 
 char *process_request(Config_server *_config, int *anwser_len){
 	config = _config;
@@ -163,6 +160,7 @@ char *process_request(Config_server *_config, int *anwser_len){
 	}
 	else{ //If syntax and semantic is valid
 		get_http_version();
+		get_current_website();
 
 		_Token *method = searchTree( NULL , "method");
 
@@ -235,11 +233,11 @@ Answer_list *process_method(int method){
 
 FileData *get_file_data(int isPost){
 
-	char *name = get_file_name();
+	char *name = get_complete_path();
 
 	/*TODO : DETECT PHP */
 	is_php = strstr( name, ".php") != NULL;
-	if (is_php) fastcgi_request( name , 1 , config->phpport , isPost);
+	if (is_php) fastcgi_request( name , 1 , config->phpport , c_site, isPost);
 
 	if( isPost ) return push_file_data(name);
 
@@ -300,51 +298,53 @@ FileData * push_file_data(char *name){
 	return file;
 }
 
+char *get_complete_path(){
+	if (c_site == NULL) return NULL; //We do nothing if the host is wrong or if there is not website in the config file.
+
+	char *_name = get_file_name();
+	
+	//printf("Nom fichier : %s\n", _name);
+
+	int len = strlen(_name) + c_site->root_len + 1;
+	char *name = malloc(len);
+	memset(name, '\0', len);
+	strcpy(name, c_site->root);
+	strcat(name, _name);
+
+	free(_name);
+	return name;
+}
+
 char *get_file_name(){
-	Website *site = NULL;
 
-	if( current_version == 1){ //We check the host header only in HTTP/1.1
-		_Token *host = searchTree(NULL, "host");
-		int host_len = 0;
-		char *host_val = getElementValue( host->node, &host_len);
-
-		site = find_website(config, host_val, host_len);
-
-		purgeElement(&host);
-	} else {
-		site = config->websites; //If HTTP/1.0 we put the first website in the config file
-	}
-	if (site == NULL) return NULL; //We do nothing if the host is wrong or if there is not website in the config file.
+	if (c_site == NULL) return NULL; //We do nothing if the host is wrong or if there is not website in the config file.
 
 	_Token *target = searchTree(NULL , "absolute-path");
-	int target_len = 0;
-	char *target_val = getElementValue( target->node, &target_len);
-	target_val = percent_encoding(target_val, target_len);
+	int _len = 0;
+	char *_name = getElementValue( target->node, &_len);
+	_name = percent_encoding(_name, _len);
 
-	//printf("Nom fichier : %s\n", target_val);
 
 	char *name = NULL;
-	if( target_len == 1){ //If the target is /, we get the index file in the config
-		int len = target_len + site->root_len + site->index_len + 1;
+	if( _len == 1){ //If the target is /, we get the index file in the config
+		int len = _len + c_site->index_len + 1;
 		name = malloc(len);
 		if (name){
 			memset(name, '\0', len);
-			strcpy(name, site->root);
-			strncat(name, target_val, target_len);
-			strcat(name, site->index);
+			strncpy(name, _name, len);
+			strcat(name, c_site->index);
 		}
 	}
 	else{
-		int len = target_len + site->root_len + 1;
+		int len = _len + 1;
 		name = malloc(len);
 		if (name){
 			memset(name, '\0', len);
-			strcpy(name, site->root);
-			strncat(name, target_val, target_len);
+			strncpy(name, _name, len);
 		}
 	}
 
-	free(target_val);
+	free(_name);
 	purgeElement(&target);
 
 	return name;
@@ -419,6 +419,19 @@ void get_http_version(){
 	purgeElement(&version);
 }
 
+void get_current_website(){
+	if( current_version == 1){ //We check the host header only in HTTP/1.1
+		_Token *host = searchTree(NULL, "host");
+		int host_len = 0;
+		char *host_val = getElementValue( host->node, &host_len);
+
+		c_site = find_website(config, host_val, host_len);
+
+		purgeElement(&host);
+	} else {
+		c_site = config->websites; //If HTTP/1.0 we put the first website in the config file
+	}
+}
 
 /*
 Generation of response

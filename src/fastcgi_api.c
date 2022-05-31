@@ -23,6 +23,7 @@
 #include "fastcgi.h" 
 #include "fastcgi_api.h" 
 #include "syntax_api.h"
+#include "process_api.h"
 #include "utils.h"
 
 /* Constants */
@@ -56,18 +57,22 @@ void add_params_name(FCGI_Header *h);
 void fastcgi_answer(int fd, unsigned short request_id );
 FCGI_Header *readData_socket(int fd);
 char *fastcgi_concat_stdout(Fastcgi_stdout_linked *list, int * len);
+void handle_fastcgi_data(char * data, int len);
 
 void add_stdout_list(Fastcgi_stdout_linked **list, FCGI_Header *header);
 void purge_stdout_list(Fastcgi_stdout_linked **list);
 FCGI_Header *get_stdout_list(Fastcgi_stdout_linked *list, int i);
 
+void try_add_params(FCGI_Header *h, char *name, char *value);
+char *get_header_val(char *name);
 
 /* Definition */
 
+char fastcgi_error[4] = "200";
 char *fastcgi_data = NULL;
-int fastcgi_length = 0;
 char *fastcgi_type = NULL;
-
+int fastcgi_length = 0;
+Website *site = NULL;
 
 char * fastcgi_get_body(int *len){
 	if (len) *len = fastcgi_length;
@@ -78,13 +83,14 @@ char * fastcgi_get_type(){
 	return fastcgi_type;
 }
 
-void fastcgi_request(char *file_name, int request_id, int port, int isPost){
+void fastcgi_request(char *file_name, int request_id, int port, Website *_site, int isPost){
+	site = _site;
 	fastcgi_data = NULL;
 	fastcgi_length = 0;
 	fastcgi_type = NULL;
+	memcpy(fastcgi_error, "200", 3);
 
-
-	_Token *body = searchTree(NULL, "message-body");
+	char *body = get_header_val("message-body");
 
 	int fd = open_socket(port);
 
@@ -95,13 +101,12 @@ void fastcgi_request(char *file_name, int request_id, int port, int isPost){
 
 	if ( body != NULL && isPost == 1)
 	{
-		int body_length;
-		char *body_data = getElementValue(body->node, &body_length);
-
-		fastcgi_stdin(fd, request_id, body_data, body_length);
-		fastcgi_stdin(fd, request_id, "", 0);
+		fastcgi_stdin(fd, request_id, body, strlen(body));
+		
+		free(body);
 	}
-	
+
+	fastcgi_send(fd, FCGI_STDIN, request_id, NULL, 0);
 
 	fastcgi_answer(fd, request_id);
 }
@@ -125,61 +130,16 @@ int open_socket(int port){
 		perror("connect failed\n");
 		return (-1);
 	}
+	/*
+	struct sockaddr_in sin;	
+	socklen_t len = sizeof(sin);
+	if (getsockname(fd, (struct sockaddr *)&sin, &len) == -1)
+		perror("getsockname");
+	else
+		printf("port number %d\n", ntohs(sin.sin_port));
+
+*/
 	return fd;
-}
-
-FCGI_Header *readData_socket(int fd){
-	FCGI_Header *header = malloc( FASTCGILENGTH + FCGI_HEADER_SIZE);
-	header->version=0; 
-	header->type=0; 
-	header->requestId=0; 
-	header->contentLength=0; 
-	header->paddingLength=0; 
-	header->reserved = 0;
-	memset(header->contentData, '\0', FASTCGILENGTH);
-
-	int size = 0;
-	int n = 0;
-
-	while ( n < FCGI_HEADER_SIZE)
-	{
-		do {
-			size += read(fd, header + n , FCGI_HEADER_SIZE - n);
-		} while (size == -1 && errno == EINTR);
-		n += size;
-	}
-
-	if (n != FCGI_HEADER_SIZE) printf("FCGI -> ERREUR Read\n");
-
-	size = 0;
-	n = 0;
-
-	int data_length = ntohs(header->contentLength);
-	int padding_length = header->paddingLength;
-
-
-	while ( n < data_length)
-	{
-		do {
-			size = read(fd, header->contentData + n, data_length - n);
-		} while (size == -1 && errno == EINTR);
-		n += size;
-
-	}
-
-	size = 0;
-	n = 0;
-	char temp;
-	
-	while ( n < padding_length)
-	{
-		do {
-			size = read(fd, &temp, 1);
-		} while (size == -1 && errno == EINTR);
-		n += size;
-	}
-
-	return header;
 }
 
 void sendData_socket(int fd, FCGI_Header *header, int len){
@@ -236,18 +196,58 @@ void fastcgi_params(int fd, unsigned short request_id, char *file_name, int port
 	h.contentLength = 0;
 	h.reserved = 0;
 	
+	//?HOST
+	try_add_params(&h, "HTTP_HOST", "Host");
+	//?USER_AGENT
+	try_add_params(&h, "HTTP_USER_AGENT", "User-Agent");
+	//?ACCEPT
+	try_add_params(&h, "HTTP_ACCEPT", "Accept");
+	//?ACCEPT_LANGUAGE
+	try_add_params(&h, "HTTP_ACCEPT_LANGUAGE", "Accept-Language");
+	//?ACCEPT_ENCODING
+	try_add_params(&h, "HTTP_ACCEPT_ENCODING", "Accept-Encoding");
+	//?CONNECTION
+	try_add_params(&h, "HTTP_CONNECTION", "Connection");
+
+	if( isPost ){
+		//>CONTENT_TYPE
+		try_add_params(&h, "CONTENT_TYPE", "Content-Type");
+		//>CONTENT_LENGTH
+		try_add_params(&h, "CONTENT_LENGTH", "Content-Length");
+		//>REFERER
+		try_add_params(&h, "HTTP-REFERER", "Referer");
+	}
+	
+	//ADDRESS
+	//PORT
+	//REMOTEPORT
+
+
+	//DOCUMENT_ROOT
+	addNameValuePair(&h,"DOCUMENT_ROOT", site->root);
+	//SCRIPTFILENAME
 	add_params_script(&h, file_name, port);
+	//URI
+	try_add_params(&h, "REQUEST_URI", "request-target");
+	//SCRIPTNAME
+	char *temp = get_file_name();
+	addNameValuePair(&h, "SCRIPT_NAME", temp);
+	free(temp);
 
-	add_params_query(&h);	
+	//INTERFACE
+	addNameValuePair(&h, "GATEWAY_INTERFACE","CGI/1.1");
+	//PROTOCAOLE ?maybe faire gaffe au 1.0
+	addNameValuePair(&h, "SERVER_PROTOCOL","HTTP/1.1");
 
+	//METHODE
 	if( isPost) addNameValuePair(&h,"REQUEST_METHOD","POST");
 	else addNameValuePair(&h,"REQUEST_METHOD","GET");
-
-	//add_params_name(&h);
-
+	//QUERY
+	add_params_query(&h);
+	//REQUEST_SCHEME
+	addNameValuePair(&h, "REQUEST_SCHEME","http");
 
 	sendData_socket(fd,&h,FCGI_HEADER_SIZE+(h.contentLength)+(h.paddingLength));  
-
 	fastcgi_send(fd, FCGI_PARAMS, request_id, NULL, 0);
 
 }
@@ -260,36 +260,14 @@ void fastcgi_send(int fd, unsigned char type, unsigned short request_id, char *d
 	h.version=FCGI_VERSION_1; 
 	h.type=type; 
 	h.requestId=htons(request_id); 
-	h.contentLength=len; 
+	h.contentLength=len;
 	h.paddingLength=0;
 	h.reserved = 0;
 	if(data != NULL) memcpy(h.contentData,data,len);
+	else memset(h.contentData, '\0', FASTCGILENGTH);
 
 	sendData_socket(fd,&h,FCGI_HEADER_SIZE+(h.contentLength)+(h.paddingLength));  
 
-}
-
-void fastcgi_answer(int fd, unsigned short request_id ){
-	Fastcgi_stdout_linked *list = NULL;
-	int i = -1;
-
-	do
-	{
-		i++;
-		add_stdout_list(&list, readData_socket(fd));
-
-	} while ( get_stdout_list(list, i)->type == FCGI_STDOUT );
-	
-	FCGI_Header *header = get_stdout_list(list, 0);
-	if( header->type == FCGI_STDOUT ){
-		fastcgi_type = malloc(header->contentLength);
-		memset(fastcgi_type, '\0', header->contentLength);
-		memcpy(fastcgi_type, header->contentData, header->contentLength);
-	}
-
-	fastcgi_data = fastcgi_concat_stdout( list->next, &fastcgi_length);
-
-	purge_stdout_list(&list);
 }
 
 void writeLen(int len, char **p) {
@@ -322,6 +300,108 @@ int addNameValuePair(FCGI_Header *h,char *name,char *value)
 	h->contentLength+=valueLen+((valueLen>0x7F)?4:1);
 	return 0;
 }	 
+
+/*Output */
+
+FCGI_Header *readData_socket(int fd){
+	FCGI_Header *header = malloc( FASTCGILENGTH + FCGI_HEADER_SIZE);
+	header->version=0; 
+	header->type=0; 
+	header->requestId=0; 
+	header->contentLength=0; 
+	header->paddingLength=0; 
+	header->reserved = 0;
+	memset(header->contentData, '\0', FASTCGILENGTH);
+
+	int size = 0;
+	int n = 0;
+
+	while ( n < FCGI_HEADER_SIZE)
+	{
+		do {
+			size += read(fd, header + n , FCGI_HEADER_SIZE - n);
+		} while (size == -1 && errno == EINTR);
+		n += size;
+	}
+
+	if (n != FCGI_HEADER_SIZE) printf("FCGI -> ERREUR Read\n");
+
+	size = 0;
+	n = 0;
+
+	int data_length = ntohs(header->contentLength);
+	int padding_length = header->paddingLength;
+
+
+	while ( n < data_length)
+	{
+		do {
+			size = read(fd, header->contentData + n, data_length - n);
+		} while (size == -1 && errno == EINTR);
+		n += size;
+
+	}
+
+	size = 0;
+	n = 0;
+	char temp;
+	
+	while ( n < padding_length)
+	{
+		do {
+			size = read(fd, &temp, 1);
+		} while (size == -1 && errno == EINTR);
+		n += size;
+	}
+
+	return header;
+}
+
+void fastcgi_answer(int fd, unsigned short request_id ){
+	Fastcgi_stdout_linked *list = NULL;
+	int i = -1;
+
+	do
+	{
+		i++;
+		add_stdout_list(&list, readData_socket(fd));
+
+	} while ( get_stdout_list(list, i)->type == FCGI_STDOUT );
+	
+	int len;
+	char * data = fastcgi_concat_stdout( list, &len);
+
+	handle_fastcgi_data( data, len);
+
+	free(data);
+
+	purge_stdout_list(&list);
+}
+
+void handle_fastcgi_data(char * _data, int _len){
+	char *error = strstr(_data, "Status: ");
+	char *type = strstr(_data, "Content-type:");
+	char *data = strstr(_data, "\r\n\r\n") + 2;
+	int len;
+
+	fastcgi_data = NULL;
+
+	if(error) memcpy(fastcgi_error, error, 3);
+	if( type == 0 || data == 0) return;
+
+	len = (int)(data - type);
+
+	fastcgi_type = malloc( len + 1);
+	memset( fastcgi_type, '\0', len + 1);
+	memcpy( fastcgi_type, type, len );
+		
+	len = _len - (int)(data - _data);
+
+	fastcgi_length = len;
+	fastcgi_data = malloc( len + 1);
+	memset( fastcgi_data, '\0', len + 1);
+	memcpy( fastcgi_data, data, len );
+}
 
 char *fastcgi_concat_stdout(Fastcgi_stdout_linked *list, int * len){
 	Fastcgi_stdout_linked *temp = list;
@@ -390,6 +470,7 @@ FCGI_Header *get_stdout_list(Fastcgi_stdout_linked *list, int i){
 	return temp->header;
 }
 
+
 /* PARAMS */
 
 void add_params_query(FCGI_Header *h){
@@ -418,22 +499,29 @@ void add_params_script(FCGI_Header *h, char *file_name, int port){
 	free(test);
 }
 
-void add_params_name(FCGI_Header *h){
-	_Token *name = searchTree(NULL , "absolute-path");
+void try_add_params(FCGI_Header *h, char *name, char *value){
+	char * val = get_header_val(value);
+	if(val) 
+	{
+		addNameValuePair(h, name, val);
+		free(val);
+	}
+	
+}
 
-	if( name){
+char *get_header_val(char *name){
+	_Token *val = searchTree(NULL , name);
+
+	if( val){
 		int len;
-		getElementValue(name->node, &len);
+		getElementValue(val->node, &len);
 
 		char *temp = malloc( len + 1);
 		memset(temp, '\0', len + 1);
-		memcpy(temp, getElementValue(name->node, NULL), len);
+		memcpy(temp, getElementValue(val->node, NULL), len);
 
-		char *after = percent_encoding(temp, len);
-
-		printf("AFTER : %s  \n TEMP : %s \n\n", after, temp);
-
-		addNameValuePair(h,"REQUEST_URL",temp);
-		addNameValuePair(h,"SCRIPT_NAME",after + 1);
+		free(val);
+		return temp;
 	}
+	return NULL;
 }
