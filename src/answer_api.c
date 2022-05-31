@@ -1,22 +1,10 @@
-/**
- * @file answer_api.c
- * @author MANDON ANAEL
- * @brief Generation of an HTTP answer.
- * @version 1
- * @date 2022-04-8
- * 
- */
-
 #include "answer_api.h"
 
-#include <stdlib.h> //Malloc
-#include <string.h> //strcpy
-
-char * concat_answer(Answer_list *answer, int *length){
+char * concat_answers(Answer_list *answer, int *length){
 	Answer_list *temp = answer;
 	*length = 3; //For the two \n before body and null Char
 
-
+	// We compute the total length
 	while (temp != NULL)
 	{
 		*length = *length + temp->len + 1;
@@ -26,34 +14,38 @@ char * concat_answer(Answer_list *answer, int *length){
 	char *message = malloc(*length);
 	memset(message, '\0', *length);
 
+	// We find the status node
 	temp = answer;
-	while ( temp != NULL && temp->tag != UTI_STATUS) temp = temp->next;
+	while ( temp != NULL && temp->tag != A_TAG_STATUS) temp = temp->next;
 	if (temp == NULL) return NULL;
 	else {
-		strncpy(message, temp->value, temp->len);
+		strncpy(message, temp->data, temp->len);
 		strcat(message, "\n");
 	}
 
+	// We find the first header node
 	temp = answer;
-	while ( temp != NULL && temp->tag != UTI_HEADER) temp = temp->next;
+	while ( temp != NULL && temp->tag != A_TAG_HEADER) temp = temp->next;
 	if (temp != NULL){
-		while ( temp != NULL && temp->tag == UTI_HEADER)
+
+		// We find the new header node
+		while ( temp != NULL && temp->tag == A_TAG_HEADER)
 		{
-			strncat(message, temp->value, temp->len);
+			strncat(message, temp->data, temp->len);
 			strcat(message, "\n");
 			temp = temp->next;
 		}
 	}
 	
+	// We find the body node
 	temp = answer;
-	while ( temp != NULL && temp->tag != UTI_BODY) temp = temp->next;
+	while ( temp != NULL && temp->tag != A_TAG_BODY) temp = temp->next;
 	if (temp == NULL) return NULL;
 	else {
 		strcat(message, "\n");
 		char *t = strstr(message,"\n\n") + 2;
-		memcpy(t, temp->value, temp->len);
+		memcpy(t, temp->data, temp->len);
 	}
-
 
 	return message;
 }
@@ -61,7 +53,7 @@ char * concat_answer(Answer_list *answer, int *length){
 void add_node_answer(Answer_list **list, int tag, char *value, int len, int canFree){
 	Answer_list *new = malloc(sizeof(Answer_list));
 	new->tag = tag;
-	new->value = value;
+	new->data = value;
 	new->len = len;
 	new->canFree = canFree;
 	new->next = NULL;
@@ -71,7 +63,6 @@ void add_node_answer(Answer_list **list, int tag, char *value, int len, int canF
 	if( temp == NULL) *list = new;
 	else{
 		while ( temp->next != NULL ) temp = temp->next;
-
 		temp->next = new;
 	}
 }
@@ -85,7 +76,7 @@ void purge_answer(Answer_list **list){
 			current = temp;
 			temp = temp->next;
 
-			if( current->canFree == UTI_CANFREE) free(current->value);
+			if( current->canFree == A_CANFREE) free(current->data);
 			free(current);
 		}
 	}

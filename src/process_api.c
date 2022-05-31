@@ -186,7 +186,7 @@ char *process_request(Config_server *_config, int *anwser_len){
 
 	
 
-    char * answer_text = concat_answer(answer, anwser_len);
+    char * answer_text = concat_answers(answer, anwser_len);
 	purge_answer(&answer);
 
 	return answer_text;
@@ -196,7 +196,7 @@ Answer_list *process_errors(char *error_code){
 	Answer_list *answer = NULL;
 
 	//Add the status line
-	add_node_answer( &answer, UTI_STATUS, error_code, strlen(error_code), 0);
+	add_node_answer( &answer, A_TAG_STATUS, error_code, strlen(error_code), !A_CANFREE);
 
 	//Add headers
 	generate_date_header(&answer);
@@ -362,7 +362,7 @@ void copy_to_answer(char *_value, int len , Answer_list **answer){
 
 	if(value){
 		memcpy(value, _value, len ); //Copy the _value
-		add_node_answer( answer, UTI_HEADER, value, len, UTI_CANFREE);
+		add_node_answer( answer, A_TAG_HEADER, value, len, A_CANFREE);
 	}
 }
 
@@ -441,13 +441,13 @@ void generate_status(Answer_list **answer, FileData *file){
 	switch (file->status)
 	{
 	case 0:
-		add_node_answer( answer, UTI_STATUS, C_200, strlen(C_200), 0);
+		add_node_answer( answer, A_TAG_STATUS, C_200, strlen(C_200), !A_CANFREE);
 	break;
 	case 1:
-		add_node_answer( answer, UTI_STATUS, C_404, strlen(C_404), 0);
+		add_node_answer( answer, A_TAG_STATUS, C_404, strlen(C_404), !A_CANFREE);
 		break;
 	case 2:
-		add_node_answer( answer, UTI_STATUS, C_201 , strlen(C_201), 0);
+		add_node_answer( answer, A_TAG_STATUS, C_201 , strlen(C_201), !A_CANFREE);
 		break;
 	default:
 		break;
@@ -466,13 +466,12 @@ void generate_header_fields(Answer_list **answer, FileData *file){
 }
 
 void generate_body(Answer_list **answer, FileData *file){
-	int canFree = (file->name  == NULL);
+	int canFree = (file->name  == NULL) ? A_CANFREE : !A_CANFREE;
 	if( file->data != NULL){
-		
-		add_node_answer( answer, UTI_BODY, file->data, file->len, canFree);
+		add_node_answer( answer, A_TAG_BODY, file->data, file->len, canFree);
 	}
 	else{
-		add_node_answer( answer, UTI_BODY, "", 0, 0);
+		add_node_answer( answer, A_TAG_BODY, "", 0, !A_CANFREE);
 	}
 }
 
@@ -491,7 +490,7 @@ void generate_date_header(Answer_list **answer){
 }
 
 void generate_Allow_header(Answer_list **answer){
-	add_node_answer( answer, UTI_HEADER, "Allow: GET, HEAD, POST", 16, 0);
+	add_node_answer( answer, A_TAG_HEADER, "Allow: GET, HEAD, POST", 16, !A_CANFREE);
 }
 
 void generate_content_length_header(Answer_list **answer, FileData *file){
@@ -516,7 +515,7 @@ void generate_content_type_header(Answer_list **answer, FileData *file){
 }
 
 void generate_server_header(Answer_list **answer){
-	add_node_answer( answer, UTI_HEADER, "Server: Esisar Groupe 9", 24, 0);
+	add_node_answer( answer, A_TAG_HEADER, "Server: Esisar Groupe 9", 24, !A_CANFREE);
 }
 
 void generate_keep_alive_header(Answer_list **answer){
