@@ -1,26 +1,41 @@
 #ifndef DERIVATION_TREE_H
 	#define DERIVATION_TREE_H
+	/**
+	 * @file derivation_tree.h
+	 * @author BENJAMIN ROBERT | MANDON ANAEL | PEDER LEO
+	 * @brief Functions who handle the create, use and deletion of the tree based structure.
+	 * @version 1.0
+	 * @date 2022-03-30
+	 */
 
-	#include <stdio.h>
+	/* System Includes */
 
-	/* Declaration */
+	#include <stdlib.h> //Malloc
+	#include <stdio.h> //fprintf
+
+	#define T_DEBUG 0
+	#define T_MAX_LEVEL 3
 
 	typedef struct st_derivation_tree derivation_tree;
 	typedef struct st_linked_child linked_child;
 
 	/**
-	 * @brief The structure who handle the derivation tree
-	 * 
+	 * @brief A Tree based structure who stored all the HTTP request after parsing.
 	 */
 	struct st_derivation_tree
 	{
-		char *tag;
+		/* The Name of the current node */
+		char *tag; 
+		/* The Value of the current node */
 		char *value;
 		int value_length;
 		int tree_level;
 		linked_child *children;
 	};
 
+	/**
+	 * @brief A basic linked list for storing all childrens of each node in the tree
+	 */
 	struct st_linked_child
 	{
 		derivation_tree *node;

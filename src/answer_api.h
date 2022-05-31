@@ -4,11 +4,10 @@
 	 * @file answer_api.h
 	 * @author MANDON ANAEL
 	 * @brief Generation of an HTTP answer.
-	 * @version 1
+	 * @version 1.0
 	 * @date 2022-04-8
 	 */
-	
-	
+
 	/* System Includes */
 
 	#include <stdlib.h> //Malloc

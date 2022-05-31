@@ -1,26 +1,4 @@
-/**
- * @file derivation_tree.c
- * @author BENJAMIN ROBERT | MANDON ANAEL | PEDER LEO
- * @brief Functions who handle the creation and deletion of the derivation_tree
- * @version 1
- * @date 2022-03-30
- * 
- * 
- */
-
-/* System Includes */
-
-#include <stdlib.h> //Malloc
-#include <stdio.h>
-
-/* User Includes */
-
 #include "derivation_tree.h"
-
-/* Constants */
-
-#define T_DEBUG 0
-#define T_MAX_LEVEL 3
 
 /* Definition */
 
