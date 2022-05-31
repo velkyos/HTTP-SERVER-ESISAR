@@ -23,6 +23,7 @@
 #include "fastcgi.h" 
 #include "fastcgi_api.h" 
 #include "syntax_api.h"
+#include "utils.h"
 
 /* Constants */
 
@@ -39,22 +40,27 @@ typedef struct st_fastcgi_stdout_link
 
 int open_socket(int port);
 void sendData_socket(int fd, FCGI_Header *header, int len);
-FCGI_Header *readData_socket(int fd);
-
-void fastcgi_begin_request(int fd,unsigned short request_id,unsigned short role,unsigned char flags);
-void fastcgi_abort_request(int fd,unsigned short request_id);
-void fastcgi_params(int fd, unsigned short request_id, const char *file_name, int port, int isPost);
-
-void fastcgi_answer(int fd, unsigned short request_id );
-void fastcgi_send(int fd, unsigned char type, unsigned short request_id, char *data, unsigned int len);
 
 int addNameValuePair(FCGI_Header *h,char *name,char *value);
 void writeLen(int len, char **p);
+
+void fastcgi_send(int fd, unsigned char type, unsigned short request_id, char *data, unsigned int len);
+void fastcgi_begin_request(int fd,unsigned short request_id,unsigned short role,unsigned char flags);
+void fastcgi_abort_request(int fd,unsigned short request_id);
+
+void fastcgi_params(int fd, unsigned short request_id,char *file_name, int port, int isPost);
+void add_params_script(FCGI_Header *h, char *file_name, int port);
+void add_params_query(FCGI_Header *h);
+void add_params_name(FCGI_Header *h);
+
+void fastcgi_answer(int fd, unsigned short request_id );
+FCGI_Header *readData_socket(int fd);
 char *fastcgi_concat_stdout(Fastcgi_stdout_linked *list, int * len);
 
 void add_stdout_list(Fastcgi_stdout_linked **list, FCGI_Header *header);
 void purge_stdout_list(Fastcgi_stdout_linked **list);
 FCGI_Header *get_stdout_list(Fastcgi_stdout_linked *list, int i);
+
 
 /* Definition */
 
@@ -220,7 +226,7 @@ void fastcgi_abort_request(int fd,unsigned short request_id){
 	sendData_socket(fd,&h,FCGI_HEADER_SIZE+(h.contentLength)+(h.paddingLength)); 
 }
 
-void fastcgi_params(int fd, unsigned short request_id, const char *file_name, int port, int isPost){
+void fastcgi_params(int fd, unsigned short request_id, char *file_name, int port, int isPost){
 	FCGI_Header h;
 
 	h.version = FCGI_VERSION_1;
@@ -230,18 +236,15 @@ void fastcgi_params(int fd, unsigned short request_id, const char *file_name, in
 	h.contentLength = 0;
 	h.reserved = 0;
 	
-	addNameValuePair(&h,"SCRIPT_FILENAME","proxy:fcgi://127.0.0.1:9000//var/tes/test.php");
-	addNameValuePair(&h,"SERVER_PORT","80");
-	addNameValuePair(&h,"SERVER_NAME","127.0.0.1");
-	addNameValuePair(&h,"SERVER_ADDR","127.0.0.1");
-	addNameValuePair(&h,"DOCUMENT_ROOT","/var/tes");
-	addNameValuePair(&h,"GATEWAY_INTERFACE","CGI/1.1");
-	addNameValuePair(&h,"SERVER_PROTOCOLE","HTTP/1.1");
-	addNameValuePair(&h,"QUERY_STRING",NULL);
+	add_params_script(&h, file_name, port);
+
+	add_params_query(&h);	
+
 	if( isPost) addNameValuePair(&h,"REQUEST_METHOD","POST");
 	else addNameValuePair(&h,"REQUEST_METHOD","GET");
-	addNameValuePair(&h,"REQUEST_URL","test.php");
-	addNameValuePair(&h,"SCRIPT_NAME","test.php");
+
+	//add_params_name(&h);
+
 
 	sendData_socket(fd,&h,FCGI_HEADER_SIZE+(h.contentLength)+(h.paddingLength));  
 
@@ -387,3 +390,50 @@ FCGI_Header *get_stdout_list(Fastcgi_stdout_linked *list, int i){
 	return temp->header;
 }
 
+/* PARAMS */
+
+void add_params_query(FCGI_Header *h){
+	_Token *query = searchTree(NULL, "query");
+	if (query){
+		int len;
+		char *temp = getElementValue(query->node, &len);
+		char *query_string = malloc( len + 1);
+		memset(query_string, '\0', len + 1);
+		memcpy(query_string, temp, len);
+		addNameValuePair(h,"QUERY_STRING", query_string);
+		free(query_string);
+	} 
+	else addNameValuePair(h,"QUERY_STRING",NULL);
+}
+
+void add_params_script(FCGI_Header *h, char *file_name, int port){
+	int len = 32 + strlen(file_name);
+	char *test = malloc( len );
+
+	memset(test, '\0', len);
+
+	sprintf(test, "proxy:fcgi://127.0.0.1:%d/%s", port, file_name);
+
+	addNameValuePair(h,"SCRIPT_FILENAME", test);
+	free(test);
+}
+
+void add_params_name(FCGI_Header *h){
+	_Token *name = searchTree(NULL , "absolute-path");
+
+	if( name){
+		int len;
+		getElementValue(name->node, &len);
+
+		char *temp = malloc( len + 1);
+		memset(temp, '\0', len + 1);
+		memcpy(temp, getElementValue(name->node, NULL), len);
+
+		char *after = percent_encoding(temp, len);
+
+		printf("AFTER : %s  \n TEMP : %s \n\n", after, temp);
+
+		addNameValuePair(h,"REQUEST_URL",temp);
+		addNameValuePair(h,"SCRIPT_NAME",after + 1);
+	}
+}

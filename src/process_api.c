@@ -238,8 +238,8 @@ FileData *get_file_data(int isPost){
 	char *name = get_file_name();
 
 	/*TODO : DETECT PHP */
-	is_php = 1;
-	fastcgi_request("test.php",10,9000, isPost);
+	is_php = strstr( name, ".php") != NULL;
+	if (is_php) fastcgi_request( name , 1 , config->phpport , isPost);
 
 	if( isPost ) return push_file_data(name);
 
@@ -418,6 +418,7 @@ void get_http_version(){
 	current_version = (compare_string(version_val,"HTTP/1.1")) ? 1 : 0;
 	purgeElement(&version);
 }
+
 
 /*
 Generation of response

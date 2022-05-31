@@ -23,6 +23,7 @@
         int port;
         int hosts;
         int maxcycle;
+		int phpport;
 		int keepTimeOut;
 		int keepMax;
     }Config_server;
