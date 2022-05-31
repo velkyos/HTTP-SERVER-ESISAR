@@ -28,6 +28,9 @@
 #define C_400 "HTTP/1.1 400 Bad Request"
 #define C_404 "HTTP/1.1 404 Not Found"
 #define C_501 "HTTP/1.1 501 Not Implemented"
+#define C_GET 1
+#define C_POST 2
+#define C_HEAD 3
 
 /* Declaration */
 
@@ -39,6 +42,7 @@ typedef struct str_fileData{
 	char *name;
 	char *data;
 	int len;
+	int status;
 } FileData;
 /**
  * @brief Function who process HEAD and GET methods.
@@ -47,14 +51,8 @@ typedef struct str_fileData{
  * @param isGet 'Boolean' to tell if it's a GET or an HEAD method.
  * @return Return an linked list with all the parts of the answer.
  */
-Answer_list *process_head(int isGet);
-/**
- * @brief Function who process POST methods.
- * @see Answer_list
- *
- * @return Return an linked list with all the parts of the answer.
- */
-Answer_list *process_post();
+Answer_list *process_method(int isGet);
+
 /**
  * @brief Function who process Bad request.
  * @see Answer_list
@@ -70,7 +68,7 @@ Answer_list *process_errors(char *error_code);
  * @param answer The adress of the linked list.
  * @param file The adress of the information about the file.
  */
-void generate_status(Answer_list **answer, int status);
+void generate_status(Answer_list **answer, FileData *file);
 /**
  * @brief Generate header fields and copy it into the answer_list.
  *
@@ -91,14 +89,14 @@ void generate_body(Answer_list **answer, FileData *file);
  *
  * @return Return the Name, length and the data of the file.
  */
-FileData *get_file_data();
+FileData *get_file_data(int isPost);
 /**
  * @brief Write data to file.
  * @see get_file_name()
  *
  * @return Return 2 if file as been created, 0 if the file as been replaced and 1 for errors
  */
-int push_file_data();
+FileData * push_file_data(char *name);
 /**
  * @brief Use magiclib to get the type of the file the client want to access.
  *
@@ -145,17 +143,20 @@ void generate_connection_header(Answer_list **answer);
 
 /* Definition */
 
- /** The config file*/
+ /** The config file */
 Config_server *config = NULL;
- /** Current connection_status*/
+ /** Current connection_status */
 int connection_status = PRO_UNKNOWN;
  /** Current HTTP_version of the client */
 int current_version = 0;
+ /** Is the current request a request to the php server */
+int is_php = 0;
 
 char *process_request(Config_server *_config, int *anwser_len){
 	config = _config;
 	connection_status = PRO_CLOSE;
     Answer_list *answer = NULL;
+	is_php = 0;
 
 	if ( getRootTree() == NULL){ //If syntax or semantic is not valid
 		answer = process_errors(C_400);
@@ -167,17 +168,17 @@ char *process_request(Config_server *_config, int *anwser_len){
 
 		if ( strncmp( getElementValue(method->node, NULL), "GET",3) == 0)
 		{
-			answer = process_head(1);
-			fastcgi_request("test.php",10,9000, 0);
+			answer = process_method( C_GET );
+			//fastcgi_request("test.php",10,9000, 0);
 		}
 		else if ( strncmp( getElementValue(method->node, NULL), "HEAD" ,4)  == 0)
 		{
-			answer = process_head(0);
+			answer = process_method( C_HEAD );
 		}
 		else if (strncmp( getElementValue(method->node, NULL), "POST" ,4)  == 0)
 		{
-			answer= process_post();
-			fastcgi_request("test.php",10,9000, 1);
+			answer = process_method( C_POST);
+			//fastcgi_request("test.php",10,9000, 1);
 		}
 		else { //Not implemented method
 			answer = process_errors(C_501);
@@ -210,98 +211,90 @@ Answer_list *process_errors(char *error_code){
 	return answer;
 }
 
-Answer_list *process_head(int isGet){
+Answer_list *process_method(int method){
 	Answer_list *answer = NULL;
-	FileData *file = get_file_data();
+	FileData *file = get_file_data( method == C_POST );
 
 	if(file == NULL) return process_errors(C_404);
 
-	generate_status(&answer, file==NULL);
+	generate_status(&answer, file);
 
 	generate_header_fields(&answer, file);
 
-	if ( isGet == 1 ) generate_body(&answer, file);
+	if ( method == C_GET || method == C_POST ) generate_body(&answer, file);
 	else generate_body(&answer, NULL);
-{
 
-	}
 	if ( file != NULL){
-		free(file->name);
-		free(file);
+		
+		if ( file->name != NULL) free(file->name);
+		else free(file->data);
 	}
 
 	return answer;
 }
 
+FileData *get_file_data(int isPost){
 
-Answer_list *process_post(){
-	Answer_list *answer = NULL;
-	int code = push_file_data();
+	char *name = get_file_name();
 
-	if( code == -1 ){
-		return process_errors(C_404);
-	}else{
-		generate_status(&answer,code);
-		generate_header_fields(&answer, NULL);
-		generate_body(&answer, NULL);
-	}
-	return answer;
-}
+	/*TODO : DETECT PHP */
 
-FileData *get_file_data(){
+	if( isPost ) return push_file_data(name);
+
 	FileData *file = malloc(sizeof(FileData));
-	file->name = NULL;
+	file->name = name;
 	file->data = NULL;
+	file->status = 1;
+	file->len = 0;
 
-	file->name = get_file_name();
-
-	if(file->name == NULL) {
-		free(file);
-		return NULL;
+	if( is_php ){
+		//On free le nom ce qui permet de déterminer si c'est du php ou non
+		if( file->name != NULL ) free(file->name);
+		file->data = fastcgi_get_body(&file->len);
+		file->status = 0;
+		return file;
 	}
+
+	if(file->name == NULL) return file;
 
 	file->data = read_file( file->name, &file->len);
 
-	if(file->data == NULL) {
-		free(file->name);
-		free(file);
-		return NULL;
-	}
+	if(file->data == NULL) return file;
 
+	file->status = 0;
 	return file;
 }
 
-int push_file_data(){
+FileData * push_file_data(char *name){
 	FileData *file = malloc(sizeof(FileData));
-	file->name = NULL;
+	file->name = name;
 	file->data = NULL;
-	int code;
+	file->status = 1;
+	file->len = 0;
 
+	if( is_php ){
+		//On free le nom ce qui permet de déterminer si c'est du php ou non
+		if( file->name != NULL ) free(file->name);
+		file->data = fastcgi_get_body(&file->len);
+		file->status = 0;
+		return file;
+	}
 
 	_Token *method = searchTree( NULL , "message-body");
-	file->name = get_file_name();
-	file->data = getElementValue(method->node, NULL);
-	file->len = strlen(getElementValue(method->node, NULL));
-	purgeElement(&method);
 
-	if(file->name == NULL) {
-		free(file);
-		return -1;
+	if( method != NULL){
+		file->data = getElementValue(method->node, NULL);
+		file->len = strlen(getElementValue(method->node, NULL));
+		purgeElement(&method);
 	}
 
-	if(file->data == NULL) {
-		free(file->name);
-		free(file);
-		return -1;
-	}
+	if(file->name == NULL || file->data == NULL) return file;
 
-	if((code=write_file( file->name,file->data, file->len))==-1){
-		return -1;
-	}
+	file->status = write_file( file->name,file->data, file->len);
 
-	return code;
+	file->status = 0;
+	return file;
 }
-
 
 char *get_file_name(){
 	Website *site = NULL;
@@ -426,24 +419,28 @@ void get_http_version(){
 Generation of response
 */
 
-void generate_status(Answer_list **answer, int status){
-	if(status == 1) {
-		add_node_answer( answer, UTI_STATUS, C_404, strlen(C_404), 0);
-	}
-	else if(status == 2){
-		add_node_answer( answer, UTI_STATUS, C_201 , strlen(C_201), 0);
-	}
-	else if(status == 0) {
+void generate_status(Answer_list **answer, FileData *file){
+	switch (file->status)
+	{
+	case 0:
 		add_node_answer( answer, UTI_STATUS, C_200, strlen(C_200), 0);
+	break;
+	case 1:
+		add_node_answer( answer, UTI_STATUS, C_404, strlen(C_404), 0);
+		break;
+	case 2:
+		add_node_answer( answer, UTI_STATUS, C_201 , strlen(C_201), 0);
+		break;
+	default:
+		break;
 	}
 }
 
 void generate_header_fields(Answer_list **answer, FileData *file){
-	if(file != NULL){
+	if(file->data != NULL){
 		generate_content_type_header(answer, file);
 	}
 	generate_content_length_header(answer, file);
-	generate_age_header(answer);
 	generate_server_header(answer);
 	generate_connection_header(answer);
 	generate_date_header(answer);
@@ -451,16 +448,16 @@ void generate_header_fields(Answer_list **answer, FileData *file){
 }
 
 void generate_body(Answer_list **answer, FileData *file){
-	if( file != NULL) {
-		add_node_answer( answer, UTI_BODY, file->data, file->len, 0);
+	//Pour savoir si on peut free on pas sachant que si ça vient de nous les data on ne doit pas free alors
+	//Que si cela vient de php on doit
+	int canFree = 0;
+	if( file->data != NULL){
+		if( file->name == NULL) canFree = 1;
+		add_node_answer( answer, UTI_BODY, file->data, file->len, canFree);
 	}
 	else{
 		add_node_answer( answer, UTI_BODY, "", 0, 0);
 	}
-}
-
-void generate_age_header(Answer_list **answer){
-	add_node_answer( answer, UTI_HEADER, "Age: 0", 6, 0);
 }
 
 void generate_date_header(Answer_list **answer){
@@ -478,7 +475,7 @@ void generate_date_header(Answer_list **answer){
 }
 
 void generate_Allow_header(Answer_list **answer){
-	add_node_answer( answer, UTI_HEADER, "Allow: GET, HEAD", 16, 0);
+	add_node_answer( answer, UTI_HEADER, "Allow: GET, HEAD, POST", 16, 0);
 }
 
 void generate_content_length_header(Answer_list **answer, FileData *file){
@@ -491,7 +488,14 @@ void generate_content_length_header(Answer_list **answer, FileData *file){
 }
 
 void generate_content_type_header(Answer_list **answer, FileData *file){
-	char *type = get_content_type( file->name);
+	char *type = NULL;
+	
+	if( is_php) {
+		fastcgi_get_type();
+	}else{
+		get_content_type( file->name);
+	}
+	
 	char value[80] = "";
 	sprintf(value, "Content-Type: %s", type);
 

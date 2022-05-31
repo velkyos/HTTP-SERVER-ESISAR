@@ -47,6 +47,15 @@ void writeLen(int len, char **p);
 
 /* Definition */
 
+char * fastcgi_get_body(int *len){
+	return NULL;
+}
+
+char * fastcgi_get_type(){
+	return NULL;
+}
+
+
 void fastcgi_request(char *file_name, int request_id, int port, int isPost){
 	_Token *body = searchTree(NULL, "message-body");
 
