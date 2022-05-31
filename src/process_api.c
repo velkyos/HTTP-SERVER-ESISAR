@@ -118,7 +118,7 @@ char *get_file_name();
  * @param _value The text you want to copy.
  * @param answer The adress of the linked list.
  */
-void copy_to_answer(char *_value, Answer_list **answer);
+void copy_to_answer(char *_value, int len , Answer_list **answer);
 /** @brief Get the http_version used by the client.*/
 void get_http_version();
 /** @brief Generate the age header (Value of 0 because no cache)*/
@@ -169,7 +169,7 @@ char *process_request(Config_server *_config, int *anwser_len){
 		if ( strncmp( getElementValue(method->node, NULL), "GET",3) == 0)
 		{
 			answer = process_method( C_GET );
-			//fastcgi_request("test.php",10,9000, 0);
+			
 		}
 		else if ( strncmp( getElementValue(method->node, NULL), "HEAD" ,4)  == 0)
 		{
@@ -227,7 +227,7 @@ Answer_list *process_method(int method){
 	if ( file != NULL){
 		
 		if ( file->name != NULL) free(file->name);
-		else free(file->data);
+		free(file);
 	}
 
 	return answer;
@@ -238,6 +238,8 @@ FileData *get_file_data(int isPost){
 	char *name = get_file_name();
 
 	/*TODO : DETECT PHP */
+	is_php = 1;
+	fastcgi_request("test.php",10,9000, isPost);
 
 	if( isPost ) return push_file_data(name);
 
@@ -250,6 +252,7 @@ FileData *get_file_data(int isPost){
 	if( is_php ){
 		//On free le nom ce qui permet de déterminer si c'est du php ou non
 		if( file->name != NULL ) free(file->name);
+		file->name = NULL;
 		file->data = fastcgi_get_body(&file->len);
 		file->status = 0;
 		return file;
@@ -275,6 +278,7 @@ FileData * push_file_data(char *name){
 	if( is_php ){
 		//On free le nom ce qui permet de déterminer si c'est du php ou non
 		if( file->name != NULL ) free(file->name);
+		file->name = NULL;
 		file->data = fastcgi_get_body(&file->len);
 		file->status = 0;
 		return file;
@@ -317,7 +321,7 @@ char *get_file_name(){
 	char *target_val = getElementValue( target->node, &target_len);
 	target_val = percent_encoding(target_val, target_len);
 
-	printf("Nom fichier : %s\n", target_val);
+	//printf("Nom fichier : %s\n", target_val);
 
 	char *name = NULL;
 	if( target_len == 1){ //If the target is /, we get the index file in the config
@@ -350,14 +354,14 @@ int get_connection_status(){
 	return connection_status;
 }
 
-void copy_to_answer(char *_value, Answer_list **answer){
-	int len = strlen(_value);
+void copy_to_answer(char *_value, int len , Answer_list **answer){
+	if( len == -1 ) len = strlen(_value);
 	char *value = malloc(len + 1);
 
 	memset(value, '\0', len + 1); //We fill all with 0
 
 	if(value){
-		memcpy(value, _value, len + 1); //Copy the _value
+		memcpy(value, _value, len ); //Copy the _value
 		add_node_answer( answer, UTI_HEADER, value, len, UTI_CANFREE);
 	}
 }
@@ -437,22 +441,20 @@ void generate_status(Answer_list **answer, FileData *file){
 }
 
 void generate_header_fields(Answer_list **answer, FileData *file){
-	if(file->data != NULL){
-		generate_content_type_header(answer, file);
-	}
 	generate_content_length_header(answer, file);
 	generate_server_header(answer);
 	generate_connection_header(answer);
 	generate_date_header(answer);
 	generate_Allow_header(answer);
+	if(file->data != NULL){
+		generate_content_type_header(answer, file);
+	}
 }
 
 void generate_body(Answer_list **answer, FileData *file){
-	//Pour savoir si on peut free on pas sachant que si ça vient de nous les data on ne doit pas free alors
-	//Que si cela vient de php on doit
-	int canFree = 0;
+	int canFree = (file->name  == NULL);
 	if( file->data != NULL){
-		if( file->name == NULL) canFree = 1;
+		
 		add_node_answer( answer, UTI_BODY, file->data, file->len, canFree);
 	}
 	else{
@@ -469,7 +471,7 @@ void generate_date_header(Answer_list **answer){
 	char value[50] = "";
 	sprintf(value, "Date: %s", value_t);
 
-	copy_to_answer(value, answer);
+	copy_to_answer(value, -1, answer);
 
 	free(value_t);
 }
@@ -484,23 +486,19 @@ void generate_content_length_header(Answer_list **answer, FileData *file){
 	if ( file != NULL) sprintf(value, "Content-Length: %d", file->len);
 	else sprintf(value, "Content-Length: %d", 0);
 
-	copy_to_answer(value, answer);
+	copy_to_answer(value, -1, answer);
 }
 
 void generate_content_type_header(Answer_list **answer, FileData *file){
 	char *type = NULL;
-	
-	if( is_php) {
-		fastcgi_get_type();
-	}else{
-		get_content_type( file->name);
-	}
-	
 	char value[80] = "";
-	sprintf(value, "Content-Type: %s", type);
 
+	if( is_php ) type = fastcgi_get_type();
+	else type = get_content_type(file->name);
+
+	sprintf(value, "Content-Type: %s", type);
 	free(type);
-	copy_to_answer(value, answer);
+	copy_to_answer(value, -1, answer);
 }
 
 void generate_server_header(Answer_list **answer){
@@ -511,7 +509,7 @@ void generate_keep_alive_header(Answer_list **answer){
 	char value[50] = "";
 	sprintf(value, "Keep-Alive: timeout=%d, max=%d", config->keepTimeOut, config->keepMax);
 
-	copy_to_answer(value, answer);
+	copy_to_answer(value,-1,  answer);
 }
 
 void generate_connection_header(Answer_list **answer){
@@ -531,7 +529,7 @@ void generate_connection_header(Answer_list **answer){
 
 		sprintf(value, "Connection: %.*s", tok_len, tok_val);
 
-		copy_to_answer(value, answer);
+		copy_to_answer(value, -1, answer);
 	}
 
 	purgeElement(&tok);
