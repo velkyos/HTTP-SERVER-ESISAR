@@ -48,8 +48,6 @@ void writeLen(int len, char **p);
 /* Definition */
 
 void fastcgi_request(char *file_name, int request_id, int port, int isPost){
-	printf("DEBUG 0\n");
-
 	_Token *body = searchTree(NULL, "message-body");
 
 
@@ -69,7 +67,6 @@ void fastcgi_request(char *file_name, int request_id, int port, int isPost){
 		fastcgi_stdin(fd, request_id, "", 0);
 	}
 	
-	printf("DEBUG 4\n");
 
 	fastcgi_answer(fd, request_id);
 }
@@ -113,10 +110,11 @@ FCGI_Header readData_socket(int fd){
 
 	size = 0;
 	n = 0;
-	int data_length = ntohs(header.contentLength);
-	int padding_length = ntohs(header.contentLength);
 
-	printf("\n\nLecture de data : %d\n", data_length);
+	int data_length = ntohs(header.contentLength);
+	int padding_length = header.paddingLength;
+
+	printf("\n\nLecture de %d : %d et de %d\n", header.type, data_length, header.paddingLength);
 	while ( n < data_length)
 	{
 		do {
@@ -125,12 +123,11 @@ FCGI_Header readData_socket(int fd){
 		n += size;
 		printf("lu %d char\n", size);
 	}
-	header.contentData[n] = '\0';
 
 	size = 0;
 	n = 0;
 	char temp;
-
+	
 	while ( n < padding_length)
 	{
 		do {
@@ -138,7 +135,7 @@ FCGI_Header readData_socket(int fd){
 		} while (size == -1 && errno == EINTR);
 		n += size;
 	}
-
+	printf("J'ai lu que %d\n", n);
 	return header;
 }
 
@@ -221,9 +218,9 @@ void fastcgi_send(int fd, unsigned char type, unsigned short request_id, char *d
 	h.contentLength=len; 
 	h.paddingLength=0;
 	if(data != NULL) memcpy(h.contentData,data,len); 
-	printf("HI : %d\n", type);
+
 	sendData_socket(fd,&h,FCGI_HEADER_SIZE+(h.contentLength)+(h.paddingLength));  
-	printf("HI : %d\n", type);
+
 }
 
 void fastcgi_answer(int fd, unsigned short request_id ){
@@ -233,8 +230,6 @@ void fastcgi_answer(int fd, unsigned short request_id ){
 	do
 	{
 		header = readData_socket(fd);
-		printf("DATA = [%s\n]", header.contentData);
-
 	} while ( header.type == FCGI_STDOUT );
 	
 	if ( header.type != FCGI_END_REQUEST) printf("ERREUR MAUVAIS TYPE\n");
