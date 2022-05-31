@@ -114,20 +114,26 @@ char *percent_encoding(char *str, int len){
 
 	while ( index < len)
 	{
-		if( *str == '%'){
-			buffer[0] = *(++str);
-			buffer[1] = *(++str);
-			*temp = (char)strtol(buffer, NULL, 16);
-			index += 2;
+		if(strncmp("../",str,3)==0) {
+			str+=3;
+			index+=3;
+    	}
+		else{
+			if( *str == '%'){
+				buffer[0] = *(++str);
+				buffer[1] = *(++str);
+				*temp = (char)strtol(buffer, NULL, 16);
+				index += 2;
+			}
+			else if ( *str == '+'){
+				*temp = ' ';
+			}else{
+				*temp = *str;
+			}
+			temp++;
+			str++;
+			index++;
 		}
-		else if ( *str == '+'){
-			*temp = ' ';
-		}else{
-			*temp = *str;
-		}
-		temp++;
-		str++;
-		index++;
 	}
 
 	return res;

@@ -19,6 +19,7 @@
 #include "process_api.h"
 #include "syntax_api.h"
 #include "answer_api.h"
+#include "fastcgi_api.h"
 
 /* Constants */
 
@@ -27,6 +28,9 @@
 #define C_400 "HTTP/1.1 400 Bad Request"
 #define C_404 "HTTP/1.1 404 Not Found"
 #define C_501 "HTTP/1.1 501 Not Implemented"
+#define C_GET 1
+#define C_POST 2
+#define C_HEAD 3
 
 /* Declaration */
 
@@ -38,6 +42,7 @@ typedef struct str_fileData{
 	char *name;
 	char *data;
 	int len;
+	int status;
 } FileData;
 /**
  * @brief Function who process HEAD and GET methods.
@@ -46,14 +51,8 @@ typedef struct str_fileData{
  * @param isGet 'Boolean' to tell if it's a GET or an HEAD method.
  * @return Return an linked list with all the parts of the answer.
  */
-Answer_list *process_head(int isGet);
-/**
- * @brief Function who process POST methods.
- * @see Answer_list
- *
- * @return Return an linked list with all the parts of the answer.
- */
-Answer_list *process_post();
+Answer_list *process_method(int isGet);
+
 /**
  * @brief Function who process Bad request.
  * @see Answer_list
@@ -69,7 +68,7 @@ Answer_list *process_errors(char *error_code);
  * @param answer The adress of the linked list.
  * @param file The adress of the information about the file.
  */
-void generate_status(Answer_list **answer, int status);
+void generate_status(Answer_list **answer, FileData *file);
 /**
  * @brief Generate header fields and copy it into the answer_list.
  *
@@ -90,14 +89,14 @@ void generate_body(Answer_list **answer, FileData *file);
  *
  * @return Return the Name, length and the data of the file.
  */
-FileData *get_file_data();
+FileData *get_file_data(int isPost);
 /**
  * @brief Write data to file.
  * @see get_file_name()
  *
  * @return Return 2 if file as been created, 0 if the file as been replaced and 1 for errors
  */
-int push_file_data();
+FileData * push_file_data(char *name);
 /**
  * @brief Use magiclib to get the type of the file the client want to access.
  *
@@ -105,21 +104,15 @@ int push_file_data();
  * @return Return the type in the HTTP format.
  */
 char *get_content_type(char *file_name);
-/**
- * @brief Get the file name (path) using the request and the config file to access the correct one.
- * @see Config_server
- * @see Website
- *
- * @return Return the Name of the file.
- */
-char *get_file_name();
+
+char *get_complete_path();
 /**
  * @brief A utility function who job is to copy the _value into a new allocated char* and insert the resulting one into the answer_list.
  *
  * @param _value The text you want to copy.
  * @param answer The adress of the linked list.
  */
-void copy_to_answer(char *_value, Answer_list **answer);
+void copy_to_answer(char *_value, int len , Answer_list **answer);
 /** @brief Get the http_version used by the client.*/
 void get_http_version();
 /** @brief Generate the age header (Value of 0 because no cache)*/
@@ -142,45 +135,56 @@ void generate_keep_alive_header(Answer_list **answer);
 /** @brief Generate the connection header header.*/
 void generate_connection_header(Answer_list **answer);
 
+void get_current_website();
+
 /* Definition */
 
- /** The config file*/
+ /** The config file */
 Config_server *config = NULL;
- /** Current connection_status*/
+ /** Current connection_status */
 int connection_status = PRO_UNKNOWN;
  /** Current HTTP_version of the client */
 int current_version = 0;
+ /** Is the current request a request to the php server */
+int is_php = 0;
+Website *c_site = NULL;
 
 char *process_request(Config_server *_config, int *anwser_len){
 	config = _config;
 	connection_status = PRO_CLOSE;
     Answer_list *answer = NULL;
+	is_php = 0;
 
 	if ( getRootTree() == NULL){ //If syntax or semantic is not valid
 		answer = process_errors(C_400);
 	}
 	else{ //If syntax and semantic is valid
 		get_http_version();
+		get_current_website();
 
 		_Token *method = searchTree( NULL , "method");
 
 		if ( strncmp( getElementValue(method->node, NULL), "GET",3) == 0)
 		{
-			answer = process_head(1);
+			answer = process_method( C_GET );
+			
 		}
 		else if ( strncmp( getElementValue(method->node, NULL), "HEAD" ,4)  == 0)
 		{
-			answer = process_head(0);
+			answer = process_method( C_HEAD );
 		}
 		else if (strncmp( getElementValue(method->node, NULL), "POST" ,4)  == 0)
 		{
-			answer= process_post();
+			answer = process_method( C_POST);
+			//fastcgi_request("test.php",10,9000, 1);
 		}
 		else { //Not implemented method
 			answer = process_errors(C_501);
 		}
 		purgeElement(&method);
 	}
+
+	
 
     char * answer_text = concat_answer(answer, anwser_len);
 	purge_answer(&answer);
@@ -205,144 +209,142 @@ Answer_list *process_errors(char *error_code){
 	return answer;
 }
 
-Answer_list *process_head(int isGet){
+Answer_list *process_method(int method){
 	Answer_list *answer = NULL;
-	FileData *file = get_file_data();
+	FileData *file = get_file_data( method == C_POST );
 
 	if(file == NULL) return process_errors(C_404);
 
-	generate_status(&answer, file==NULL);
+	generate_status(&answer, file);
 
 	generate_header_fields(&answer, file);
 
-	if ( isGet == 1 ) generate_body(&answer, file);
+	if ( method == C_GET || method == C_POST ) generate_body(&answer, file);
 	else generate_body(&answer, NULL);
-{
 
-	}
 	if ( file != NULL){
-		free(file->name);
+		
+		if ( file->name != NULL) free(file->name);
 		free(file);
 	}
 
 	return answer;
 }
 
+FileData *get_file_data(int isPost){
 
-Answer_list *process_post(){
-	Answer_list *answer = NULL;
-	int code = push_file_data();
+	char *name = get_complete_path();
 
-	if( code == -1 ){
-		return process_errors(C_404);
-	}else{
-		generate_status(&answer,code);
-		generate_header_fields(&answer, NULL);
-		generate_body(&answer, NULL);
-	}
-	return answer;
-}
+	/*TODO : DETECT PHP */
+	is_php = strstr( name, ".php") != NULL;
+	if (is_php) fastcgi_request( name , 1 , config->phpport , c_site, isPost);
 
-FileData *get_file_data(){
+	if( isPost ) return push_file_data(name);
+
 	FileData *file = malloc(sizeof(FileData));
-	file->name = NULL;
+	file->name = name;
 	file->data = NULL;
+	file->status = 1;
+	file->len = 0;
 
-	file->name = get_file_name();
-
-	if(file->name == NULL) {
-		free(file);
-		return NULL;
+	if( is_php ){
+		//On free le nom ce qui permet de déterminer si c'est du php ou non
+		if( file->name != NULL ) free(file->name);
+		file->name = NULL;
+		file->data = fastcgi_get_body(&file->len);
+		file->status = 0;
+		return file;
 	}
+
+	if(file->name == NULL) return file;
 
 	file->data = read_file( file->name, &file->len);
 
-	if(file->data == NULL) {
-		free(file->name);
-		free(file);
-		return NULL;
-	}
+	if(file->data == NULL) return file;
 
+	file->status = 0;
 	return file;
 }
 
-int push_file_data(){
+FileData * push_file_data(char *name){
 	FileData *file = malloc(sizeof(FileData));
-	file->name = NULL;
+	file->name = name;
 	file->data = NULL;
-	int code;
+	file->status = 1;
+	file->len = 0;
 
+	if( is_php ){
+		//On free le nom ce qui permet de déterminer si c'est du php ou non
+		if( file->name != NULL ) free(file->name);
+		file->name = NULL;
+		file->data = fastcgi_get_body(&file->len);
+		file->status = 0;
+		return file;
+	}
 
 	_Token *method = searchTree( NULL , "message-body");
-	file->name = get_file_name();
-	file->data = getElementValue(method->node, NULL);
-	file->len = strlen(getElementValue(method->node, NULL));
-	purgeElement(&method);
 
-	if(file->name == NULL) {
-		free(file);
-		return -1;
+	if( method != NULL){
+		file->data = getElementValue(method->node, NULL);
+		file->len = strlen(getElementValue(method->node, NULL));
+		purgeElement(&method);
 	}
 
-	if(file->data == NULL) {
-		free(file->name);
-		free(file);
-		return -1;
-	}
+	if(file->name == NULL || file->data == NULL) return file;
 
-	if((code=write_file( file->name,file->data, file->len))==-1){
-		return -1;
-	}
+	file->status = write_file( file->name,file->data, file->len);
 
-	return code;
+	file->status = 0;
+	return file;
 }
 
+char *get_complete_path(){
+	if (c_site == NULL) return NULL; //We do nothing if the host is wrong or if there is not website in the config file.
+
+	char *_name = get_file_name();
+	
+	//printf("Nom fichier : %s\n", _name);
+
+	int len = strlen(_name) + c_site->root_len + 1;
+	char *name = malloc(len);
+	memset(name, '\0', len);
+	strcpy(name, c_site->root);
+	strcat(name, _name);
+
+	free(_name);
+	return name;
+}
 
 char *get_file_name(){
-	Website *site = NULL;
 
-	if( current_version == 1){ //We check the host header only in HTTP/1.1
-		_Token *host = searchTree(NULL, "host");
-		int host_len = 0;
-		char *host_val = getElementValue( host->node, &host_len);
-
-		site = find_website(config, host_val, host_len);
-
-		purgeElement(&host);
-	} else {
-		site = config->websites; //If HTTP/1.0 we put the first website in the config file
-	}
-	if (site == NULL) return NULL; //We do nothing if the host is wrong or if there is not website in the config file.
+	if (c_site == NULL) return NULL; //We do nothing if the host is wrong or if there is not website in the config file.
 
 	_Token *target = searchTree(NULL , "absolute-path");
-	int target_len = 0;
-	char *target_val = getElementValue( target->node, &target_len);
-	target_val = percent_encoding(target_val, target_len);
+	int _len = 0;
+	char *_name = getElementValue( target->node, &_len);
+	_name = percent_encoding(_name, _len);
 
-	printf("Nom fichier : %s\n", target_val);
 
 	char *name = NULL;
-	if( target_len == 1){ //If the target is /, we get the index file in the config
-		int len = target_len + site->root_len + site->index_len + 1;
+	if( _len == 1){ //If the target is /, we get the index file in the config
+		int len = _len + c_site->index_len + 1;
 		name = malloc(len);
 		if (name){
 			memset(name, '\0', len);
-			strcpy(name, site->root);
-			strncat(name, target_val, target_len);
-			strcat(name, site->index);
+			strncpy(name, _name, len);
+			strcat(name, c_site->index);
 		}
 	}
 	else{
-		int len = target_len + site->root_len + 1;
+		int len = _len + 1;
 		name = malloc(len);
 		if (name){
 			memset(name, '\0', len);
-			strcpy(name, site->root);
-			strncat(name, target_val, target_len);
+			strncpy(name, _name, len);
 		}
 	}
 
-	free(target_val);
+	free(_name);
 	purgeElement(&target);
 
 	return name;
@@ -352,14 +354,14 @@ int get_connection_status(){
 	return connection_status;
 }
 
-void copy_to_answer(char *_value, Answer_list **answer){
-	int len = strlen(_value);
+void copy_to_answer(char *_value, int len , Answer_list **answer){
+	if( len == -1 ) len = strlen(_value);
 	char *value = malloc(len + 1);
 
 	memset(value, '\0', len + 1); //We fill all with 0
 
 	if(value){
-		memcpy(value, _value, len + 1); //Copy the _value
+		memcpy(value, _value, len ); //Copy the _value
 		add_node_answer( answer, UTI_HEADER, value, len, UTI_CANFREE);
 	}
 }
@@ -417,45 +419,61 @@ void get_http_version(){
 	purgeElement(&version);
 }
 
+void get_current_website(){
+	if( current_version == 1){ //We check the host header only in HTTP/1.1
+		_Token *host = searchTree(NULL, "host");
+		int host_len = 0;
+		char *host_val = getElementValue( host->node, &host_len);
+
+		c_site = find_website(config, host_val, host_len);
+
+		purgeElement(&host);
+	} else {
+		c_site = config->websites; //If HTTP/1.0 we put the first website in the config file
+	}
+}
+
 /*
 Generation of response
 */
 
-void generate_status(Answer_list **answer, int status){
-	if(status == 1) {
-		add_node_answer( answer, UTI_STATUS, C_404, strlen(C_404), 0);
-	}
-	else if(status == 2){
-		add_node_answer( answer, UTI_STATUS, C_201 , strlen(C_201), 0);
-	}
-	else if(status == 0) {
+void generate_status(Answer_list **answer, FileData *file){
+	switch (file->status)
+	{
+	case 0:
 		add_node_answer( answer, UTI_STATUS, C_200, strlen(C_200), 0);
+	break;
+	case 1:
+		add_node_answer( answer, UTI_STATUS, C_404, strlen(C_404), 0);
+		break;
+	case 2:
+		add_node_answer( answer, UTI_STATUS, C_201 , strlen(C_201), 0);
+		break;
+	default:
+		break;
 	}
 }
 
 void generate_header_fields(Answer_list **answer, FileData *file){
-	if(file != NULL){
-		generate_content_type_header(answer, file);
-	}
 	generate_content_length_header(answer, file);
-	generate_age_header(answer);
 	generate_server_header(answer);
 	generate_connection_header(answer);
 	generate_date_header(answer);
 	generate_Allow_header(answer);
+	if(file->data != NULL){
+		generate_content_type_header(answer, file);
+	}
 }
 
 void generate_body(Answer_list **answer, FileData *file){
-	if( file != NULL) {
-		add_node_answer( answer, UTI_BODY, file->data, file->len, 0);
+	int canFree = (file->name  == NULL);
+	if( file->data != NULL){
+		
+		add_node_answer( answer, UTI_BODY, file->data, file->len, canFree);
 	}
 	else{
 		add_node_answer( answer, UTI_BODY, "", 0, 0);
 	}
-}
-
-void generate_age_header(Answer_list **answer){
-	add_node_answer( answer, UTI_HEADER, "Age: 0", 6, 0);
 }
 
 void generate_date_header(Answer_list **answer){
@@ -467,13 +485,13 @@ void generate_date_header(Answer_list **answer){
 	char value[50] = "";
 	sprintf(value, "Date: %s", value_t);
 
-	copy_to_answer(value, answer);
+	copy_to_answer(value, -1, answer);
 
 	free(value_t);
 }
 
 void generate_Allow_header(Answer_list **answer){
-	add_node_answer( answer, UTI_HEADER, "Allow: GET, HEAD", 16, 0);
+	add_node_answer( answer, UTI_HEADER, "Allow: GET, HEAD, POST", 16, 0);
 }
 
 void generate_content_length_header(Answer_list **answer, FileData *file){
@@ -482,16 +500,19 @@ void generate_content_length_header(Answer_list **answer, FileData *file){
 	if ( file != NULL) sprintf(value, "Content-Length: %d", file->len);
 	else sprintf(value, "Content-Length: %d", 0);
 
-	copy_to_answer(value, answer);
+	copy_to_answer(value, -1, answer);
 }
 
 void generate_content_type_header(Answer_list **answer, FileData *file){
-	char *type = get_content_type( file->name);
+	char *type = NULL;
 	char value[80] = "";
-	sprintf(value, "Content-Type: %s", type);
 
+	if( is_php ) type = fastcgi_get_type();
+	else type = get_content_type(file->name);
+
+	sprintf(value, "Content-Type: %s", type);
 	free(type);
-	copy_to_answer(value, answer);
+	copy_to_answer(value, -1, answer);
 }
 
 void generate_server_header(Answer_list **answer){
@@ -502,7 +523,7 @@ void generate_keep_alive_header(Answer_list **answer){
 	char value[50] = "";
 	sprintf(value, "Keep-Alive: timeout=%d, max=%d", config->keepTimeOut, config->keepMax);
 
-	copy_to_answer(value, answer);
+	copy_to_answer(value,-1,  answer);
 }
 
 void generate_connection_header(Answer_list **answer){
@@ -522,7 +543,7 @@ void generate_connection_header(Answer_list **answer){
 
 		sprintf(value, "Connection: %.*s", tok_len, tok_val);
 
-		copy_to_answer(value, answer);
+		copy_to_answer(value, -1, answer);
 	}
 
 	purgeElement(&tok);

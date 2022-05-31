@@ -12,6 +12,15 @@
 	int get_connection_status();
 
 	char *get_body(int *len);
+
+	/**
+	 * @brief Get the file name (path) using the request and the config file to access the correct one.
+	 * @see Config_server
+	 * @see Website
+	 *
+	 * @return Return the Name of the file.
+	 */
+	char *get_file_name();
 #endif
 
 
