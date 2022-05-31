@@ -26,60 +26,60 @@
 
 /* Constants */
 
-#define fastcgi_stdin(fd,id,stdin,len) fastcgi_send(fd,FCGI_STDIN,id,stdin,len)
+#define fastcgi_stdin(fd,id,data,len) fastcgi_send(fd,FCGI_STDIN,id,data,len)
 #define fastcgi_data(fd,id,data,len) fastcgi_send(fd,FCGI_DATA,id,data,len)
 
 /* Declaration */
 
 int open_socket(int port);
-void sendData_socket(int socket, FCGI_Header *header, int len);
-void readData_socket(int socket, FCGI_Header *header);
+void sendData_socket(int fd, FCGI_Header *header, int len);
+FCGI_Header readData_socket(int fd);
 
-void fastcgi_begin_request();
-void fastcgi_abort_request();
-void fastcgi_end_request();
-void fastcgi_params();
-void fastcgi_stdout();
-void fastcgi_stderr();
-void fastcgi_get_values();
-void fastcgi_get_values_result();
+void fastcgi_begin_request(int fd,unsigned short request_id,unsigned short role,unsigned char flags);
+void fastcgi_abort_request(int fd,unsigned short request_id);
+void fastcgi_params(int fd, unsigned short request_id, const char *file_name, int port, int isPost);
 
+void fastcgi_answer(int fd, unsigned short request_id );
 void fastcgi_send(int fd, unsigned char type, unsigned short request_id, char *data, unsigned int len);
-char * concat_params(const char *name, const char* value, char *current);
-char * generate_params(const char *file_name, int port);
+
+int addNameValuePair(FCGI_Header *h,char *name,char *value);
+void writeLen(int len, char **p);
 
 /* Definition */
 
+void fastcgi_request(char *file_name, int request_id, int port, int isPost){
+	printf("DEBUG 0\n");
 
-void fastcgi_request(char *file_name, int request_id, int port){
 	_Token *body = searchTree(NULL, "message-body");
-	int body_length;
-	char *body_data = getElementValue(body->node, &body_length);
-
-	_Token *query = searchTree(NULL, "query");
-	int query_length;
-	char *query_data = getElementValue(query->node, &query_length);
-
-	int socket = open_socket(port);
-
-	fastcgi_begin_request(socket, request_id, FCGI_RESPONDER, FCGI_KEEP_CONN);
 
 
-	if ( body_data )
+	int fd = open_socket(port);
+
+	fastcgi_begin_request(fd, request_id, FCGI_RESPONDER, FCGI_KEEP_CONN);
+
+	/*Ajouter condition si on est dans le cas d'un post*/
+	fastcgi_params(fd, request_id, file_name, port, isPost);
+
+	if ( body != NULL && isPost == 1)
 	{
-		fastcgi_stdin(socket, request_id, body_data, body_length);
-		fastcgi_stdin(socket, request_id, "", 0);
+		int body_length;
+		char *body_data = getElementValue(body->node, &body_length);
+
+		fastcgi_stdin(fd, request_id, body_data, body_length);
+		fastcgi_stdin(fd, request_id, "", 0);
 	}
 	
-}
+	printf("DEBUG 4\n");
 
+	fastcgi_answer(fd, request_id);
+}
 
 int open_socket(int port){
 	int fd;
 	struct sockaddr_in serv_addr;
 
 	if ((fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-		perror("socket creation failed\n");
+		perror("Socket creation failed\n");
 		return (-1);
 	}
 
@@ -96,37 +96,63 @@ int open_socket(int port){
 	return fd;
 }
 
-void readData_socket(int socket, FCGI_Header *header){
-	int size;
+FCGI_Header readData_socket(int fd){
+	FCGI_Header header;
+	int size = 0;
+	int n = 0;
 
-	do {
-		size = read(socket, header, FCGI_HEADER_SIZE);
-	} while (size == -1 && errno == EINTR);
-
-	if (size != FCGI_HEADER_SIZE) printf("FCGI -> ERREUR");
-
-	size = 0;
-
-	while ( size < header->contentLength)
+	while ( n < FCGI_HEADER_SIZE)
 	{
 		do {
-			size = read(socket, header->contentData + size, header->contentLength - size);
+			size += read(fd, &header + n , FCGI_HEADER_SIZE - n);
 		} while (size == -1 && errno == EINTR);
+		n += size;
 	}
-	
+
+	if (n != FCGI_HEADER_SIZE) printf("FCGI -> ERREUR Read\n");
+
+	size = 0;
+	n = 0;
+	int data_length = ntohs(header.contentLength);
+	int padding_length = ntohs(header.contentLength);
+
+	printf("\n\nLecture de data : %d\n", data_length);
+	while ( n < data_length)
+	{
+		do {
+			size = read(fd, header.contentData + n, data_length - n);
+		} while (size == -1 && errno == EINTR);
+		n += size;
+		printf("lu %d char\n", size);
+	}
+	header.contentData[n] = '\0';
+
+	size = 0;
+	n = 0;
+	char temp;
+
+	while ( n < padding_length)
+	{
+		do {
+			size = read(fd, &temp, 1);
+		} while (size == -1 && errno == EINTR);
+		n += size;
+	}
+
+	return header;
 }
 
-void sendData_socket(int socket, FCGI_Header *header, int len){
+void sendData_socket(int fd, FCGI_Header *header, int len){
 	header->contentLength=htons(header->contentLength); 
 	header->paddingLength=htons(header->paddingLength); 
 
 	int size;
-
 	while ( len > 0 ){
 		do {
-			size = write(socket, header, len);
+			size = write(fd, header, len);
 		} while (size == -1 && errno == EINTR);
 		len -= size;
+		header += size;
 	}
 }
 
@@ -156,87 +182,64 @@ void fastcgi_abort_request(int fd,unsigned short request_id){
 	sendData_socket(fd,&h,FCGI_HEADER_SIZE+(h.contentLength)+(h.paddingLength)); 
 }
 
-void fastcgi_end_request(int fd,unsigned short request_id){
-	/* TODO */
-}
-
-void fastcgi_params(int fd, unsigned short request_id){
-	/* TODO */
-}
-
-void fastcgi_stdout(int fd, unsigned short request_id){
+void fastcgi_params(int fd, unsigned short request_id, const char *file_name, int port, int isPost){
 	FCGI_Header h;
 
-	readData_socket(fd, &h);
+	h.version = FCGI_VERSION_1;
+	h.type = FCGI_PARAMS;
+	h.requestId = htons(request_id);
+	h.paddingLength = 0;
+	h.contentLength = 0;
+	
+	addNameValuePair(&h,"SCRIPT_FILENAME","proxy:fcgi://127.0.0.1:9000//var/tes/test.php");
+	addNameValuePair(&h,"SERVER_PORT","80");
+	addNameValuePair(&h,"SERVER_NAME","127.0.0.1");
+	addNameValuePair(&h,"SERVER_ADDR","127.0.0.1");
+	addNameValuePair(&h,"DOCUMENT_ROOT","/var/tes");
+	addNameValuePair(&h,"GATEWAY_INTERFACE","CGI/1.1");
+	addNameValuePair(&h,"SERVER_PROTOCOLE","HTTP/1.1");
+	addNameValuePair(&h,"QUERY_STRING",NULL);
+	if( isPost) addNameValuePair(&h,"REQUEST_METHOD","POST");
+	else addNameValuePair(&h,"REQUEST_METHOD","GET");
+	addNameValuePair(&h,"REQUEST_URL","test.php");
+	addNameValuePair(&h,"SCRIPT_NAME","test.php");
 
-	printf("DATA RECUPERER = \n %s", h.contentData);
-}
+	sendData_socket(fd,&h,FCGI_HEADER_SIZE+(h.contentLength)+(h.paddingLength));  
 
-void fastcgi_stderr(int fd, unsigned short request_id){
-	/* TODO */
-}
+	fastcgi_send(fd, FCGI_PARAMS, request_id, NULL, 0);
 
-void fastcgi_get_values(int fd, unsigned short request_id){
-	/* TODO */
-}
-
-void fastcgi_get_values_result(int fd, unsigned short request_id){
-	/* TODO */
 }
 
 void fastcgi_send(int fd, unsigned char type, unsigned short request_id, char *data, unsigned int len) {
 	FCGI_Header h; 
 
-	if (len > FASTCGILENGTH) return ; 
+	if (len > FASTCGILENGTH) {printf("ERROR\n");return ; }
+
 	h.version=FCGI_VERSION_1; 
 	h.type=type; 
 	h.requestId=htons(request_id); 
 	h.contentLength=len; 
 	h.paddingLength=0;
-	memcpy(h.contentData,data,len); 
+	if(data != NULL) memcpy(h.contentData,data,len); 
+	printf("HI : %d\n", type);
 	sendData_socket(fd,&h,FCGI_HEADER_SIZE+(h.contentLength)+(h.paddingLength));  
+	printf("HI : %d\n", type);
 }
 
+void fastcgi_answer(int fd, unsigned short request_id ){
+	FCGI_Header header;
+	header.type = FCGI_UNKNOWN_TYPE;
 
-char * concat_params(const char *name, const char* value, char *current){
-	int len = strlen(current) + strlen(name) + strlen(value) + strlen("\n = ");
+	do
+	{
+		header = readData_socket(fd);
+		printf("DATA = [%s\n]", header.contentData);
 
-	char *new = malloc( len );
-
-	strcpy( new, current);
-	strcat( new, name);
-	strcat( new, " = ");
-	strcat( new, value);
-	strcat( new, "\n");
-
-	free(current);
-	return new;
+	} while ( header.type == FCGI_STDOUT );
+	
+	if ( header.type != FCGI_END_REQUEST) printf("ERREUR MAUVAIS TYPE\n");
 }
 
-char * generate_params(const char *file_name, int port);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*
-// =========================================================================================================== // 
 void writeLen(int len, char **p) {
 	if (len > 0x7F ) { 
 		*((*p)++)=(len>>24)&0x7F; 
@@ -246,7 +249,6 @@ void writeLen(int len, char **p) {
 	} else *((*p)++)=(len)&0x7F;
 }
 	
-// =========================================================================================================== // 
 int addNameValuePair(FCGI_Header *h,char *name,char *value)
 {
 	char *p; 
@@ -266,32 +268,5 @@ int addNameValuePair(FCGI_Header *h,char *name,char *value)
 	if (value) strncpy(p,value,valueLen); 
 	h->contentLength+=nameLen+((nameLen>0x7F)?4:1);
 	h->contentLength+=valueLen+((valueLen>0x7F)?4:1);
+	return 0;
 }	 
-// =========================================================================================================== // 		
-	
-void sendGetValue(int fd) 
-{
-FCGI_Header h; 
-
-	h.version=FCGI_VERSION_1; 
-	h.type=FCGI_GET_VALUES; 
-	h.request_id=htons(FCGI_NULL_REQUEST_ID); 
-	h.contentLength=0; 
-	h.paddingLength=0; 
-	addNameValuePair(&h,FCGI_MAX_CONNS,NULL); 
-	addNameValuePair(&h,FCGI_MAX_REQS,NULL); 
-	addNameValuePair(&h,FCGI_MPXS_CONNS,NULL); 
-	sendData_socket(fd,&h,FCGI_HEADER_SIZE+(h.contentLength)+(h.paddingLength)); 
-}
-=============================================================================================== // 
-int main(int argc,char *argv[])
-{
-	int fd; 
-	fd=createSocket(9000); 
-	sendGetValue(fd); 
-	sendBeginRequest(fd,10,FCGI_RESPONDER,FCGI_KEEP_CONN); 
-	sendStdin(fd,10,argv[1],strlen(argv[1])); 
-	sendData(fd,10,argv[1],strlen(argv[1])); 
-}
-
-*/

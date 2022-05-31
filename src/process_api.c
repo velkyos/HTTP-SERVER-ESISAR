@@ -19,6 +19,7 @@
 #include "process_api.h"
 #include "syntax_api.h"
 #include "answer_api.h"
+#include "fastcgi_api.h"
 
 /* Constants */
 
@@ -167,6 +168,7 @@ char *process_request(Config_server *_config, int *anwser_len){
 		if ( strncmp( getElementValue(method->node, NULL), "GET",3) == 0)
 		{
 			answer = process_head(1);
+			fastcgi_request("test.php",10,9000, 0);
 		}
 		else if ( strncmp( getElementValue(method->node, NULL), "HEAD" ,4)  == 0)
 		{
@@ -175,12 +177,15 @@ char *process_request(Config_server *_config, int *anwser_len){
 		else if (strncmp( getElementValue(method->node, NULL), "POST" ,4)  == 0)
 		{
 			answer= process_post();
+			fastcgi_request("test.php",10,9000, 1);
 		}
 		else { //Not implemented method
 			answer = process_errors(C_501);
 		}
 		purgeElement(&method);
 	}
+
+	
 
     char * answer_text = concat_answer(answer, anwser_len);
 	purge_answer(&answer);
