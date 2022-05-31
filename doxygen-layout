@@ -5,11 +5,11 @@
     <tab type="mainpage" visible="yes" title=""/>
 	<tab type="user" url="@ref src" title="Documented files"/>
 	<tab type="user" url="@ref request.h" title="Networking"/>
-	<tab type="user" url="@ref config.c" title="Config file"/>
-	<tab type="user" url="@ref derivation_tree.c" title="Derivation Tree"/>
-	<tab type="user" url="@ref syntax_check.c" title="Parser"/>
-	<tab type="user" url="@ref semantic_api.c" title="Semantic"/>
-	<tab type="user" url="@ref process_api.c" title="Process Request"/>
+	<tab type="user" url="@ref config.h" title="Config file"/>
+	<tab type="user" url="@ref derivation_tree.h" title="Derivation Tree"/>
+	<tab type="user" url="@ref syntax_check.h" title="Parser"/>
+	<tab type="user" url="@ref semantic_api.h" title="Semantic"/>
+	<tab type="user" url="@ref process_api.h" title="Process Request"/>
 	<tab type="user" url="@ref answer_api.h" title="Answer Builder"/>
 
   </navindex>
