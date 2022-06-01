@@ -1,22 +1,4 @@
-/**
- * @file config.c
- * @author ROBERT Benjamin & PEDER LEO & MANDON ANAEL (& Quentin Giorgi)
- * @brief Utility functions.
- * @version 0.1
- * @date 2022-04-8
- *
- */
-
 #include "utils.h"
-#include <stdlib.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <sys/mman.h>
-#include <time.h>
-#include <string.h>
-
 
 char *read_file(char *name, int *len){
     char *addr = NULL;
@@ -60,8 +42,6 @@ int write_file(char *name, char *data, int len){
   return res;
 }
 
-
-
 FILE *open_file(char *name, char *option){
     FILE* file = fopen(name, option);
 	if (file == NULL){
@@ -70,7 +50,6 @@ FILE *open_file(char *name, char *option){
 	}
 	return file;
 }
-
 
 char *gmt_time(time_t *t){
 

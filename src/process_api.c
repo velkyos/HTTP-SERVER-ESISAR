@@ -160,6 +160,7 @@ char *process_request(Config_server *_config, int *anwser_len){
 	}
 	else{ //If syntax and semantic is valid
 		get_http_version();
+		printf("BONJOUR -> %d", current_version);
 		get_current_website();
 
 		_Token *method = searchTree( NULL , "method");

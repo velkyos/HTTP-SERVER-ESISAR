@@ -1,8 +1,25 @@
 #ifndef UTILS_H
     #define UTILS_H
 
-    #include <stdio.h>
+	/**
+	 * @file utils.h
+	 * @author ROBERT Benjamin & PEDER LEO & MANDON ANAEL (& Quentin Giorgi)
+	 * @brief Utility functions.
+	 * @version 0.1
+	 * @date 2022-04-8
+	 *
+	 */
+
+	#include <stdio.h>
+	#include "utils.h"
+	#include <stdlib.h>
+	#include <sys/stat.h>
+	#include <unistd.h>
+	#include <fcntl.h>
+	#include <errno.h>
+	#include <sys/mman.h>
 	#include <time.h>
+	#include <string.h>
 
 	/**
 	 * @brief Read a file with mmap.
@@ -34,6 +51,13 @@
 	 */
 	char *gmt_time(time_t *t);
 
+	/**
+	 * @brief Compare 2 string between each other
+	 * 
+	 * @param chaine1 
+	 * @param chaine2 
+	 * @return Return
+	 */
 	int compare_string(char *chaine1, char *chaine2);
 
 	/**

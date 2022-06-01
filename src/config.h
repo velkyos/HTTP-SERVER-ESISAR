@@ -115,7 +115,7 @@
 	 * @param end The end of the part of the char* where we want to find the field.
 	 * @return Return the address of the section or NULL if the section was not found.
 	 */
-	static char *find_section(char *start, char *name, char **end);
+	char *find_section(char *start, char *name, char **end);
 
 	/**
 	 * @brief Find the a field of type string and copy it into a dynamically allocated char *.
@@ -127,7 +127,7 @@
 	 * @param len The length of the created char*.
 	 * @return Return 0 for success and 1 for failure
 	 */
-	static int find_field_s(char *start, char *name, char *end, char **dest, int *len);
+	int find_field_s(char *start, char *name, char *end, char **dest, int *len);
 
 	/**
 	 * @brief Find the a field of type integer and copy it.
@@ -138,7 +138,7 @@
 	 * @param dest The destination of the interger;
 	 * @return Return 0 for success and 1 for failure
 	 */
-	static int find_field_n(char *start, char *name, char *end, int *dest);
+	int find_field_n(char *start, char *name, char *end, int *dest);
 
 
 
