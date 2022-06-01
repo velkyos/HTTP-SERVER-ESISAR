@@ -5,7 +5,7 @@
 	 * @file semantic_api.h
 	 * @author PEDER LEO
 	 * @brief Semantic check of an HTTP request.
-	 * @version 1
+	 * @version 1.0
 	 * @date 2022-04-8
 	 */
 

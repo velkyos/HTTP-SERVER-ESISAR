@@ -5,7 +5,7 @@
 	 * @file syntax_api.h
 	 * @author BENJAMIN ROBERT | MANDON ANAEL | PEDER LEO
 	 * @brief Syntax api between parsing and other function
-	 * @version 1
+	 * @version 1.0
 	 * @date 2022-03-30
 	 */
 
@@ -18,8 +18,6 @@
 	/* User Includes */
 
 	#include "syntax_check.h"
-
-	#define S_NOT_VALID -1
 
 	/**
 	 * @brief A Basic linked list for storing all node of the tree.
@@ -103,6 +101,12 @@
 	 */
 	void add_token_to_list(_Token *list, derivation_tree *node);
 
+	/**
+	 * @brief Get the value of the first element matching the tag as a dynamically allocated char*.
+	 * 
+	 * @param name The name of the tag.
+	 * @return A dynamically allocated char* where the value is stored.
+	 */
 	char *get_header_val(char *name);
 	
 #endif

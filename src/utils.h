@@ -5,7 +5,7 @@
 	 * @file utils.h
 	 * @author ROBERT Benjamin & PEDER LEO & MANDON ANAEL (& Quentin Giorgi)
 	 * @brief Utility functions.
-	 * @version 0.1
+	 * @version 1.0
 	 * @date 2022-04-8
 	 *
 	 */
