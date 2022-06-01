@@ -21,9 +21,6 @@
 
 	#define S_NOT_VALID -1
 
-	/** The root node */
-	derivation_tree *root = NULL;
-
 	/**
 	 * @brief A Basic linked list for storing all node of the tree.
 	 */

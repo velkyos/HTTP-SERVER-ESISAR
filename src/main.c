@@ -99,7 +99,7 @@ message *get_answer(message *request, int index, Config_server *config){
 	if (answer){
 		parser(request->buf, request->len);
 		
-		if(semantic() == 0) purgeTree(getRootTree);
+		if(semantic() == SEM_NON_VALID) purgeTree(getRootTree);
 
 		int len = 0;
 		char *answer_buff = process_request(config, &len);

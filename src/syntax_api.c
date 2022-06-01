@@ -1,6 +1,7 @@
 #include "syntax_api.h"
 
-
+/** The root node */
+derivation_tree *root = NULL;
 
 int parser(char *req, int len){
 	root = create_tree_node("HTTP-message",req,len,0); 
