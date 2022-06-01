@@ -1,31 +1,109 @@
-// defini un type pour la liste chainee renvoyée en réponse de la requete de recherche dans l'arbre. 
+#ifndef SYNTAX_API_H
+	#define SYNTAX_API_H
 
-typedef struct _token {
-		void *node;  		// node type opaque pointant vers un noeud de votre structure de données. 
-		struct _token *next; 	// next pointe vers le prochain token. 
-		} _Token;
+	/**
+	 * @file syntax_api.h
+	 * @author BENJAMIN ROBERT | MANDON ANAEL | PEDER LEO
+	 * @brief Syntax api between parsing and other function
+	 * @version 1
+	 * @date 2022-03-30
+	 */
 
-// Fonction qui retourne un pointeur (type opaque) vers la racine de l'arbre construit. 
-void *getRootTree(); 
+	/* System Includes */
 
-// Fonction qui recherche dans l'arbre tous les noeuds dont l'etiquette est egale à la chaine de caractères en argument.   
-// Par convention si start == NULL alors on commence à la racine 
-// sinon on effectue une recherche dans le sous-arbre à partir du noeud start 
-_Token *searchTree(void *start,char *name); 
+	#include <stdio.h>
+	#include <string.h>
+	#include <stdlib.h>
 
-// fonction qui renvoie un pointeur vers char indiquant l'etiquette du noeud. (le nom de la rulename, intermediaire ou terminal) 
-// et indique (si len!=NULL) dans *len la longueur de cette chaine.
-char *getElementTag(void *node,int *len); 
+	/* User Includes */
 
-// fonction qui renvoie un pointeur vers char indiquant la valeur du noeud. (la partie correspondnant à la rulename dans la requete HTTP ) 
-// et indique (si len!=NULL) dans *len la longueur de cette chaine.
-char *getElementValue(void *node,int *len); 
+	#include "syntax_check.h"
 
-// Fonction qui supprime et libere la liste chainée de reponse. 
-void purgeElement(_Token **r); 
+	#define S_NOT_VALID -1
 
-// Fonction qui supprime et libere toute la mémoire associée à l'arbre . 
-void purgeTree(void *tree); 
+	/** The root node */
+	derivation_tree *root = NULL;
 
-// L'appel à votre parser un char* et une longueur à parser.  
-int parser(char *req, int len); 
+	/**
+	 * @brief A Basic linked list for storing all node of the tree.
+	 */
+	typedef struct _token {
+			void *node;  
+			struct _token *next; 
+			} _Token;
+
+	/**
+	 * @brief Get the Root Tree object.
+	 * 
+	 * @return The root as an opaque object.
+	 */
+	void *getRootTree(); 
+
+	/**
+	 * @brief Search all tree node with a tag.
+	 * 
+	 * @param start The start of the Tree, leave NULL to start from the root.
+	 * @param name The tag we want to search
+	 * @return Return a linked list of all node matching the tag.
+	 */
+	_Token *searchTree(void *start,char *name); 
+
+	/**
+	 * @brief Get the tag of an Element in the Linked List.
+	 * 
+	 * @param node The node we want info on.
+	 * @param len A integer where, we are going to store the length of the tag.
+	 * @return The pointer to the tag of the element.
+	 */
+	char *getElementTag(void *node,int *len); 
+
+	/**
+	 * @brief Get the value of an Element in the Linked List.
+	 * 
+	 * @param node The node we want info on.
+	 * @param len A integer where, we are going to store the length of the value.
+	 * @return The pointer to the value of the element.
+	 */
+	char *getElementValue(void *node,int *len); 
+
+	/**
+	 * @brief Purge the linked list given by searchTree.
+	 * 
+	 * @param r The start of the linked list.
+	 */
+	void purgeElement(_Token **r); 
+
+	/**
+	 * @brief Purge the tree used to store all the information about the request
+	 * 
+	 * @param tree The pointer to the tree
+	 */
+	void purgeTree(void *tree); 
+
+	/**
+	 * @brief Main function responsible of parsing a text.
+	 * 
+	 * @param req The pointer to the text.
+	 * @param len The length of the text.
+	 * @return Return 0 in case of a failure, or the length of text.
+	 */
+	int parser(char *req, int len); 
+
+	/**
+	 * @brief Search in the tree recursively
+	 * 
+	 * @param start Start of the tree.
+	 * @param name The tag we are currently searching for.
+	 * @param list The address of the linked list for storing results.
+	 */
+	void recursif_search_tree(derivation_tree *start, char *name, _Token *list);
+
+	/**
+	 * @brief A Basic function for adding a node to the linked list.
+	 * 
+	 * @param list The linked list.
+	 * @param node The node we want to add.
+	 */
+	void add_token_to_list(_Token *list, derivation_tree *node);
+
+#endif

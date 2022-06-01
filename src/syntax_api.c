@@ -1,16 +1,6 @@
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
 #include "syntax_api.h"
 
-#include "syntax_check.h"
 
-#define NOT_VALID -1
-
-void recursif_search_tree(derivation_tree *start, char *name, _Token *list);
-void add_token_to_list(_Token *list, derivation_tree *node);
-
-derivation_tree *root = NULL;
 
 int parser(char *req, int len){
 	root = create_tree_node("HTTP-message",req,len,0); 
@@ -20,20 +10,20 @@ int parser(char *req, int len){
 
 	//We take care of the message-body, we add the remaining part of the request.
 	//If the request didn't have a message-body, we put -1 in value_length (The searchTree function will not get this node).
-	if (n != NOT_VALID ) 
+	if (n != S_NOT_VALID ) 
 	{
 		_Token *t = searchTree(root, "message-body");
 		derivation_tree *body = (derivation_tree *)t->node;
-		body->value_length = (n != NOT_VALID && len - n != 0) ? len - n : NOT_VALID;
+		body->value_length = (n != S_NOT_VALID && len - n != 0) ? len - n : S_NOT_VALID;
 		//printf("Message Body : %s\n", body->value);
 		purgeElement(&t);
 	}
-	if( n == NOT_VALID) {
+	if( n == S_NOT_VALID) {
 		purge_tree_node(root);
 		root = NULL;
 	}
 	
-	return (n != NOT_VALID) ? n : 0;
+	return (n != S_NOT_VALID) ? n : 0;
 }
 
 void *getRootTree(){
@@ -49,7 +39,7 @@ _Token *searchTree(void *start,char *name){
 	if ( start == NULL ) start_node = root;
 	else start_node = (derivation_tree *)start;
 
-	if ( strcmp (start_node->tag , name) == 0 && start_node->value_length != NOT_VALID) list->node = start_node;
+	if ( strcmp (start_node->tag , name) == 0 && start_node->value_length != S_NOT_VALID) list->node = start_node;
 	else recursif_search_tree( start_node, name, list);
 	if (list->node == NULL && list->next == NULL)
 	{
@@ -107,7 +97,7 @@ void recursif_search_tree(derivation_tree *start, char *name, _Token *list){
 	{
 		ptr_node = ptr_child->node;
 		ptr_child = ptr_child->next;
-		if ( strcmp (ptr_node->tag , name) == 0  && ptr_node->value_length != NOT_VALID)
+		if ( strcmp (ptr_node->tag , name) == 0  && ptr_node->value_length != S_NOT_VALID)
 		{
 			if ( list->node == NULL) list->node = ptr_node;
 			else add_token_to_list(list, ptr_node);

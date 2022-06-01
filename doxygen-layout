@@ -8,6 +8,7 @@
 	<tab type="user" url="@ref config.h" title="Config file"/>
 	<tab type="user" url="@ref derivation_tree.h" title="Derivation Tree"/>
 	<tab type="user" url="@ref syntax_check.h" title="Parser"/>
+	<tab type="user" url="@ref syntax_api.h" title="Parser Api"/>
 	<tab type="user" url="@ref semantic_api.h" title="Semantic"/>
 	<tab type="user" url="@ref process_api.h" title="Process Request"/>
 	<tab type="user" url="@ref answer_api.h" title="Answer Builder"/>
