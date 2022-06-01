@@ -108,7 +108,9 @@ FileData * push_file_data(char *name);
  */
 char *get_content_type(char *file_name);
 
-char *get_complete_path();
+void get_404_page(FileData *file);
+
+char *get_complete_path(char *_filename);
 /**
  * @brief A utility function who job is to copy the _value into a new allocated char* and insert the resulting one into the answer_list.
  *
@@ -190,6 +192,7 @@ char *process_request(Config_server *_config, int *anwser_len){
 	
 
     char * answer_text = concat_answers(answer, anwser_len);
+
 	purge_answer(&answer);
 
 	return answer_text;
@@ -216,7 +219,10 @@ Answer_list *process_method(int method){
 	Answer_list *answer = NULL;
 	FileData *file = get_file_data( method == C_POST );
 
-	if(file->data == NULL) return process_errors(C_404);
+	if( file->status == 404) get_404_page(file);
+
+	//printf("%s\n",file->name);
+	//printf("%s\n",file->data);
 
 	generate_status(&answer, file);
 
@@ -234,9 +240,32 @@ Answer_list *process_method(int method){
 	return answer;
 }
 
+void get_404_page(FileData *file){
+
+	file->type = malloc(26);
+	memset(file->type, '\0', file->len + 1);
+	memcpy(file->type,"text/html; charset=utf-8", 25);
+
+	if( c_site->page_404 == NULL){
+		char *name = get_file_name(NULL);
+		file->len = 242 + strlen(name);
+		file->data = malloc( file->len + 1);
+		memset(file->data, '\0', file->len + 1);
+		sprintf(file->data, "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n<title>404 Not Found</title>\n</head><body>\n<h1>Not Found</h1>\n<p>The requested URL %s was not found on this server.</p>\n<hr>\n<address>Server HTTP Groupe 9</address>\n</body></html>",name);
+		free(name);
+	}
+	else{
+		int len = strlen(c_site->page_404);
+		char *temp = malloc(len + 2);
+		memset(temp, '\0', len + 2);
+		*temp = '/';
+		strcat(temp, c_site->page_404);
+	}
+}
+
 FileData *get_file_data(int isPost){
 
-	char *name = get_complete_path();
+	char *name = get_complete_path(NULL);
 
 	/*TODO : DETECT PHP */
 	is_php = strstr( name, ".php") != NULL;
@@ -267,7 +296,6 @@ FileData *get_file_data(int isPost){
 
 	file->status = 200;
 
-	
 	if( is_php ) file->type = fastcgi_get_type();
 	else file->type = get_content_type(file->name);
 
@@ -346,36 +374,44 @@ FileData * push_file_data(char *name){
 	return file;
 }
 
-char *get_complete_path(){
+char *get_complete_path(char *_filename){
 	if (c_site == NULL) return NULL; //We do nothing if the host is wrong or if there is not website in the config file.
 
-	char *_name = get_file_name();
+	char *_name = get_file_name(_filename);
 	
-	//printf("Nom fichier : %s\n", _name);
+	//printf("Nom fichier : %s : %d\n", _name, strlen(_name));
 
-	int len = strlen(_name) + c_site->root_len + 1;
+	int len = strlen(_name) + strlen(c_site->root) + 1;
 	char *name = malloc(len);
 	memset(name, '\0', len);
 	strcpy(name, c_site->root);
 	strcat(name, _name);
 
 	free(_name);
+
 	return name;
 }
 
-char *get_file_name(){
+char *get_file_name(char *_name){
 
 	if (c_site == NULL) return NULL; //We do nothing if the host is wrong or if there is not website in the config file.
 
-	_Token *target = searchTree(NULL , "absolute-path");
 	int _len = 0;
-	char *_name = getElementValue( target->node, &_len);
+	if(!_name){
+		_Token *target = searchTree(NULL , "absolute-path");
+		_name = getElementValue( target->node, &_len);
+		purgeElement(&target);
+	}
+	else{
+		_len = strlen(_name);
+	}
+
 	_name = percent_encoding(_name, _len);
 
 
 	char *name = NULL;
 	if( _len == 1){ //If the target is /, we get the index file in the config
-		int len = _len + c_site->index_len + 1;
+		int len = _len + strlen(c_site->index) + 1;
 		name = malloc(len);
 		if (name){
 			memset(name, '\0', len);
@@ -393,7 +429,6 @@ char *get_file_name(){
 	}
 
 	free(_name);
-	purgeElement(&target);
 
 	return name;
 }
@@ -552,7 +587,7 @@ void generate_Allow_header(Answer_list **answer){
 void generate_content_length_header(Answer_list **answer, FileData *file){
 	char value[50] = "";
 
-	if ( file != NULL) sprintf(value, "Content-Length: %d", file->len);
+	if ( file->data != NULL) sprintf(value, "Content-Length: %d", file->len);
 	else sprintf(value, "Content-Length: %d", 0);
 
 	copy_to_answer(value, -1, answer);
@@ -561,7 +596,6 @@ void generate_content_length_header(Answer_list **answer, FileData *file){
 void generate_content_type_header(Answer_list **answer, FileData *file){
 	char *type =file->type;
 	char value[80] = "";
-
 
 	sprintf(value, "Content-Type: %s", type);
 	free(type);
@@ -573,10 +607,7 @@ void generate_server_header(Answer_list **answer){
 }
 
 void generate_keep_alive_header(Answer_list **answer){
-	char value[50] = "";
-	sprintf(value, "Keep-Alive: timeout=%d, max=%d", config->keepTimeOut, config->keepMax);
-
-	copy_to_answer(value,-1,  answer);
+	add_node_answer( answer, A_TAG_HEADER, "Keep-Alive: timeout=5, max=15", 30, !A_CANFREE);
 }
 
 void generate_connection_header(Answer_list **answer){

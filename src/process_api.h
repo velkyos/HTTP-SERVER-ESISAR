@@ -20,7 +20,7 @@
 	 *
 	 * @return Return the Name of the file.
 	 */
-	char *get_file_name();
+	char *get_file_name(char *_name);
 #endif
 
 

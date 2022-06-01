@@ -12,28 +12,22 @@
 	 * 
 	 * Exemple du fichier config :
 	 * \code{.ini}
-	[CONFIG]
-	port=8080  #Port d'écoute
-	php_port=9000 #Port du serveur fastcgi
-	hosts=3    #Nombre de site
-	maxcycle=0 #Nombre de fois que le serveur va répondre à une requête, 0 si infini
-	timeout=5
-	maxalive=15
+		[[CONFIG]
+		port=8080  #Listen Port
+		php_port=9000 #Port of the php server
+		hosts=2  #Numbers of host
+		maxcycle=0 #How many request you want to process before closing the server
 
-	[HOST:0]
-	name=toto0.com
-	root=websites/toto0.com/
-	index=index0.html
+		[HOST:0] #The number must start from 0 to hosts - 1
+		name=localhost #Name of the website
+		root=/var/www/html #root path (absolute path)
+		index=index.html #Default file to open if none is selected
+		page_404=404.html #Page to display on an error 404. Can be removed if don't have one.
 
-	[HOST:1]
-	name=toto1.com
-	root=websites/toto1.com/
-	index=index2.html
-
-	[HOST:2]
-	name=toto2.com
-	root=websites/toto2.com/
-	index=index2.html
+		[HOST:1] #The number must start from 0 to hosts - 1
+		name=hub.localhost #Name of the website
+		root=/var/www/hub #root path (absolute path or from the executable)
+		index=index.html #Default file to open if none is selected
 	* \endcode
 	*/
 
@@ -55,9 +49,7 @@
         char *name;
         char *root;
         char *index;
-		int name_len;
-		int root_len;
-		int index_len;
+		char *page_404;
     }Website;
 
 	/**
@@ -69,8 +61,6 @@
         int hosts;
         int maxcycle;
 		int phpport;
-		int keepTimeOut;
-		int keepMax;
     }Config_server;
 
 	/**
@@ -124,10 +114,9 @@
 	 * @param name The name of the field.
 	 * @param end The end of the section of the char* where we want to find the field.
 	 * @param dest The destination of the dynamically allocated char *;
-	 * @param len The length of the created char*.
 	 * @return Return 0 for success and 1 for failure
 	 */
-	int find_field_s(char *start, char *name, char *end, char **dest, int *len);
+	int find_field_s(char *start, char *name, char *end, char **dest);
 
 	/**
 	 * @brief Find the a field of type integer and copy it.

@@ -234,7 +234,7 @@ void fastcgi_params(int fd, unsigned short request_id, char *file_name, int port
 	//URI
 	try_add_params(&h, "REQUEST_URI", "request-target");
 	//SCRIPTNAME
-	char *temp = get_file_name();
+	char *temp = get_file_name(NULL);
 	addNameValuePair(&h, "SCRIPT_NAME", temp);
 	free(temp);
 

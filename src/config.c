@@ -1,6 +1,9 @@
 #include "config.h"
 
 Config_server *get_config(char *file_name){
+	
+	printf("Scanning the config file ...");
+
 	char *file = read_file(file_name, NULL);
 
     if (file == NULL) return NULL;
@@ -15,23 +18,32 @@ Config_server *get_config(char *file_name){
     if ( find_field_n(ptr, "hosts=", end, &config->hosts ) ) return NULL;
     if ( find_field_n(ptr, "maxcycle=", end, &config->maxcycle ) ) return NULL;
 	if ( find_field_n(ptr, "php_port=", end, &config->phpport ) ) return NULL;
-	if ( find_field_n(ptr, "timeout=", end, &config->keepTimeOut ) ) return NULL;
-	if ( find_field_n(ptr, "maxalive=", end, &config->keepMax ) ) return NULL;
 
     config->websites = malloc( sizeof(Website) * config->hosts);
 
     char name[15];
     for (int i = 0; i < config->hosts; i++)
     {   
+		
+		config->websites[i].name = NULL;
+		config->websites[i].root = NULL;
+		config->websites[i].index = NULL;
+		config->websites[i].page_404 = NULL;
+
         sprintf(name, "[HOST:%d]",i);
         ptr = find_section(file, name, &end);
 
         if (!(ptr)) return NULL;
 
-        if ( find_field_s(ptr, "name=", end, &config->websites[i].name, &config->websites[i].name_len ) ) return NULL;
-        if ( find_field_s(ptr, "root=", end, &config->websites[i].root, &config->websites[i].root_len ) ) return NULL;
-        if ( find_field_s(ptr, "index=", end, &config->websites[i].index, &config->websites[i].index_len ) ) return NULL;
+		if ( find_field_s(ptr, "name=", end, &config->websites[i].name) ) return NULL;
+        if ( find_field_s(ptr, "root=", end, &config->websites[i].root) ) return NULL;
+        if ( find_field_s(ptr, "index=", end, &config->websites[i].index) ) return NULL;
+
+        find_field_s(ptr, "page_404=", end, &config->websites[i].page_404);
     }
+
+	printf("	finished !\n");
+
     return config;
 }
 
@@ -46,7 +58,7 @@ Website *find_website(Config_server *config, char *host, int len){
 
 void generate_config_file(){
     FILE *file = open_file("server.ini","w");
-    fprintf(file,"[CONFIG]\nport=8080  #Listen Port\nphp_port=9000 #Port of the php server\nhosts=1  #Numbers of host\nmaxcycle=0   #How many request you want to process before closing the server\ntimeout=5\nmaxalive=15\n\n[HOST:0] #The number must start from 0 to hosts - 1\nname= #Name of the website\nroot= #root path (from http-server folder of absolute path)\nindex= #Default file to open if none is selected\n");
+    fprintf(file,"[[CONFIG]\nport=8080  #Listen Port\nphp_port=9000 #Port of the php server\nhosts=1  #Numbers of host\nmaxcycle=0 #How many request you want to process before closing the server\n\n[HOST:0] #The number must start from 0 to hosts - 1\nname=localhost #Name of the website\nroot=/var/www/html #root path (absolute path)\nindex=index.html #Default file to open if none is selected\npage_404=404.html #Page to display on an error 404. Can be removed if don't have one.");
     fclose(file);
 }
 
@@ -81,8 +93,11 @@ char *find_section(char *start, char *name, char **end){
     return pos;
 }
 
-int find_field_s(char *start, char *name, char *end, char **dest, int *len){
+int find_field_s(char *start, char *name, char *end, char **dest){
     char *pos = strstr( start, name);
+	int len = 0;
+	
+	if( !pos ) return 1;
 
     pos += strlen(name);
     char *temp = pos;
@@ -91,11 +106,11 @@ int find_field_s(char *start, char *name, char *end, char **dest, int *len){
 
     if ( temp >= end || *temp == '\0') return 1;    
 
-    *len = temp - pos;
+    len = temp - pos;
 
-    *dest = malloc(*len + 1);
-	memset(*dest, '\0', *len + 1);
-    strncpy( *dest, pos, *len);
+    *dest = malloc(len + 1);
+	memset(*dest, '\0', len + 1);
+    strncpy( *dest, pos, len);
     return 0;
 }
 
