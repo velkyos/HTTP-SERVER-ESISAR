@@ -9,6 +9,8 @@
 
 	char * fastcgi_get_type();
 
+	int fastcgi_get_error();
+
 #endif
 
 

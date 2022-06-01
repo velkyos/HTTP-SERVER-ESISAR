@@ -160,7 +160,6 @@ char *process_request(Config_server *_config, int *anwser_len){
 	}
 	else{ //If syntax and semantic is valid
 		get_http_version();
-		printf("BONJOUR -> %d", current_version);
 		get_current_website();
 
 		_Token *method = searchTree( NULL , "method");
@@ -214,7 +213,7 @@ Answer_list *process_method(int method){
 	Answer_list *answer = NULL;
 	FileData *file = get_file_data( method == C_POST );
 
-	if(file == NULL) return process_errors(C_404);
+	if(file->data == NULL) return process_errors(C_404);
 
 	generate_status(&answer, file);
 
@@ -245,7 +244,7 @@ FileData *get_file_data(int isPost){
 	FileData *file = malloc(sizeof(FileData));
 	file->name = name;
 	file->data = NULL;
-	file->status = 1;
+	file->status = 404;
 	file->len = 0;
 
 	if( is_php ){
@@ -253,7 +252,7 @@ FileData *get_file_data(int isPost){
 		if( file->name != NULL ) free(file->name);
 		file->name = NULL;
 		file->data = fastcgi_get_body(&file->len);
-		file->status = 0;
+		file->status = 200;
 		return file;
 	}
 
@@ -263,7 +262,7 @@ FileData *get_file_data(int isPost){
 
 	if(file->data == NULL) return file;
 
-	file->status = 0;
+	file->status = 200;
 	return file;
 }
 
@@ -271,7 +270,7 @@ FileData * push_file_data(char *name){
 	FileData *file = malloc(sizeof(FileData));
 	file->name = name;
 	file->data = NULL;
-	file->status = 1;
+	file->status = 404;
 	file->len = 0;
 
 	if( is_php ){
@@ -279,7 +278,7 @@ FileData * push_file_data(char *name){
 		if( file->name != NULL ) free(file->name);
 		file->name = NULL;
 		file->data = fastcgi_get_body(&file->len);
-		file->status = 0;
+		file->status = 200;
 		return file;
 	}
 
@@ -293,9 +292,11 @@ FileData * push_file_data(char *name){
 
 	if(file->name == NULL || file->data == NULL) return file;
 
-	file->status = write_file( file->name,file->data, file->len);
+	int result = write_file( file->name,file->data, file->len);
 
-	file->status = 0;
+	if( result == 0) file->status = 200;
+	else if( result == 2) file->status = 201;
+
 	return file;
 }
 
@@ -439,18 +440,23 @@ Generation of response
 */
 
 void generate_status(Answer_list **answer, FileData *file){
-	switch (file->status)
+	int status = is_php ? fastcgi_get_error() : file->status;
+
+	switch (status)
 	{
-	case 0:
+	case 200:
 		add_node_answer( answer, A_TAG_STATUS, C_200, strlen(C_200), !A_CANFREE);
 	break;
-	case 1:
+	case 404:
 		add_node_answer( answer, A_TAG_STATUS, C_404, strlen(C_404), !A_CANFREE);
 		break;
-	case 2:
+	case 201:
 		add_node_answer( answer, A_TAG_STATUS, C_201 , strlen(C_201), !A_CANFREE);
 		break;
 	default:
+		char s[50] = "";
+		sprintf(s, "HTTP/1.1 %d", status);
+		add_node_answer( answer, A_TAG_STATUS, s , strlen(s), !A_CANFREE);
 		break;
 	}
 }

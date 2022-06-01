@@ -57,7 +57,7 @@ void add_params_name(FCGI_Header *h);
 void fastcgi_answer(int fd, unsigned short request_id );
 FCGI_Header *readData_socket(int fd);
 char *fastcgi_concat_stdout(Fastcgi_stdout_linked *list, int * len);
-void handle_fastcgi_data(char * data, int len);
+void handle_fastcgi_data(char * _data, int _len);
 
 void add_stdout_list(Fastcgi_stdout_linked **list, FCGI_Header *header);
 void purge_stdout_list(Fastcgi_stdout_linked **list);
@@ -68,7 +68,7 @@ char *get_header_val(char *name);
 
 /* Definition */
 
-char fastcgi_error[4] = "200";
+int fastcgi_error;
 char *fastcgi_data = NULL;
 char *fastcgi_type = NULL;
 int fastcgi_length = 0;
@@ -83,12 +83,16 @@ char * fastcgi_get_type(){
 	return fastcgi_type;
 }
 
+int fastcgi_get_error(){
+	return fastcgi_error;
+}
+
 void fastcgi_request(char *file_name, int request_id, int port, Website *_site, int isPost){
 	site = _site;
 	fastcgi_data = NULL;
 	fastcgi_length = 0;
 	fastcgi_type = NULL;
-	memcpy(fastcgi_error, "200", 3);
+	fastcgi_error = 200;
 
 	char *body = get_header_val("message-body");
 
@@ -215,7 +219,7 @@ void fastcgi_params(int fd, unsigned short request_id, char *file_name, int port
 		//>CONTENT_LENGTH
 		try_add_params(&h, "CONTENT_LENGTH", "Content-Length");
 		//>REFERER
-		try_add_params(&h, "HTTP-REFERER", "Referer");
+		try_add_params(&h, "HTTP-REFERERdqsd", "Referer");
 	}
 	
 	//ADDRESS
@@ -366,7 +370,7 @@ void fastcgi_answer(int fd, unsigned short request_id ){
 		i++;
 		add_stdout_list(&list, readData_socket(fd));
 
-	} while ( get_stdout_list(list, i)->type == FCGI_STDOUT );
+	} while ( get_stdout_list(list, i)->type == FCGI_STDOUT || get_stdout_list(list, i)->type == FCGI_STDERR );
 	
 	int len;
 	char * data = fastcgi_concat_stdout( list, &len);
@@ -374,7 +378,6 @@ void fastcgi_answer(int fd, unsigned short request_id ){
 	handle_fastcgi_data( data, len);
 
 	free(data);
-
 	purge_stdout_list(&list);
 }
 
@@ -386,7 +389,8 @@ void handle_fastcgi_data(char * _data, int _len){
 
 	fastcgi_data = NULL;
 
-	if(error) memcpy(fastcgi_error, error, 3);
+	if(error) fastcgi_error = atoi(error + 8);
+	
 	if( type == 0 || data == 0) return;
 
 	len = (int)(data - type);
@@ -394,7 +398,7 @@ void handle_fastcgi_data(char * _data, int _len){
 	fastcgi_type = malloc( len + 1);
 	memset( fastcgi_type, '\0', len + 1);
 	memcpy( fastcgi_type, type, len );
-		
+
 	len = _len - (int)(data - _data);
 
 	fastcgi_length = len;
@@ -408,8 +412,11 @@ char *fastcgi_concat_stdout(Fastcgi_stdout_linked *list, int * len){
 	int size = 0;
 
 	while ( temp != NULL)
-	{
-		size += ntohs( temp->header->contentLength);
+	{		
+		if( temp->header->type == FCGI_STDERR) printf("\n ATTENTION ! \n %s \n", temp->header->contentData);
+
+		if( temp->header->type == FCGI_STDOUT) size += ntohs( temp->header->contentLength);
+			
 		temp = temp->next;
 	}
 	
@@ -417,17 +424,22 @@ char *fastcgi_concat_stdout(Fastcgi_stdout_linked *list, int * len){
 	temp = list;
 	*len = size;
 
-	char *result = malloc(sizeof(char) * size + 1);
+	char *result = malloc(size + 1);
 	memset(result, '\0', size + 1);
 
 	while ( temp != NULL)
 	{
-		int tempSize = ntohs( temp->header->contentLength);
-		memcpy( result + index, temp->header->contentData, tempSize );
+		if( temp->header->type == FCGI_STDOUT){
+			int tempSize = ntohs( temp->header->contentLength);
+			memcpy( result + index, temp->header->contentData, tempSize );
+			index += tempSize;
+		}
 
 		temp = temp->next;
-		index += tempSize;
+
 	}
+
+
 	return result;
 }
 

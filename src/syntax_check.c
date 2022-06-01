@@ -31,7 +31,7 @@
 #define S_NOT_VALID -1
 #define MAX_INT 2147483647
 
-#pragma region Declaration
+
 /* Declaration */
 
 static abnf_rule rules[];
@@ -208,8 +208,6 @@ int handle_repetition(const char *request, linked_child **current_list, const ch
  * @return How many char as been validated.
  */
 int handle_group_rule(const char *request, linked_child **current_list, const char *rule, const char *rule_end, int level, char **next_srt);
-
-#pragma endregion Declaration
 
 /* Definition */
 
