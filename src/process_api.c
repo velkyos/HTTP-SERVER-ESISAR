@@ -1,150 +1,4 @@
-/**
- * @file process_api.c
- * @author ROBERT Benjamin & PEDER Leo & MANDON Anaël
- * @brief Process of an HTTP request.
- * @version 0.6
- * @date 2022-04-8
- *
- *
- */
-/* System Includes */
-
-#include <string.h>
-#include <time.h>
-#include <stdlib.h>
-#include <magic.h>
-
-/* User Includes */
-
 #include "process_api.h"
-#include "syntax_api.h"
-#include "answer_api.h"
-#include "fastcgi_api.h"
-
-/* Constants */
-
-#define C_200 "HTTP/1.1 200 OK"
-#define C_201 "HTTP/1.1 201 Created"
-#define C_400 "HTTP/1.1 400 Bad Request"
-#define C_404 "HTTP/1.1 404 Not Found"
-#define C_406 "HTTP/1.1 406 Not Acceptable"
-#define C_501 "HTTP/1.1 501 Not Implemented"
-#define C_GET 1
-#define C_POST 2
-#define C_HEAD 3
-#define C_ACCEPT_ALL "*/*"
-
-/* Declaration */
-
-/**
- * @brief A simple structure to store information about a file.
- *
- */
-typedef struct str_fileData{
-	char *name;
-	char *data;
-	char *type;
-	int len;
-	int status;
-} FileData;
-/**
- * @brief Function who process HEAD and GET methods.
- * @see Answer_list
- *
- * @param isGet 'Boolean' to tell if it's a GET or an HEAD method.
- * @return Return an linked list with all the parts of the answer.
- */
-Answer_list *process_method(int isGet);
-
-/**
- * @brief Function who process Bad request.
- * @see Answer_list
- *
- * @param error_code The char * of the status line.
- * @return Return an linked list with all the parts of the answer.
- */
-
-Answer_list *process_errors(char *error_code);
-/**
- * @brief Generate the status and copy it into the answer_list.
- *
- * @param answer The adress of the linked list.
- * @param file The adress of the information about the file.
- */
-void generate_status(Answer_list **answer, FileData *file);
-/**
- * @brief Generate header fields and copy it into the answer_list.
- *
- * @param answer The adress of the linked list.
- * @param file The adress of the information about the file.
- */
-void generate_header_fields(Answer_list **answer, FileData *file);
-/**
- * @brief Generate the body and copy it into the answer_list.
- *
- * @param answer The adress of the linked list.
- * @param file The adress of the information about the file.
- */
-void generate_body(Answer_list **answer, FileData *file);
-/**
- * @brief Retrieve file data.
- * @see get_file_name()
- *
- * @return Return the Name, length and the data of the file.
- */
-FileData *get_file_data(int isPost);
-/**
- * @brief Write data to file.
- * @see get_file_name()
- *
- * @return Return 2 if file as been created, 0 if the file as been replaced and 1 for errors
- */
-FileData * push_file_data(char *name);
-/**
- * @brief Use magiclib to get the type of the file the client want to access.
- *
- * @param file_name
- * @return Return the type in the HTTP format.
- */
-char *get_content_type(char *file_name);
-
-void get_404_page(FileData *file);
-
-char *get_complete_path(char *_filename);
-/**
- * @brief A utility function who job is to copy the _value into a new allocated char* and insert the resulting one into the answer_list.
- *
- * @param _value The text you want to copy.
- * @param answer The adress of the linked list.
- */
-void copy_to_answer(char *_value, int len , Answer_list **answer);
-/** @brief Get the http_version used by the client.*/
-void get_http_version();
-/** @brief Generate the age header (Value of 0 because no cache)*/
-void generate_age_header(Answer_list **answer);
-/** @brief Generate the date header with the correct format.*/
-void generate_date_header(Answer_list **answer);
-/** @brief Generate the allow header with GET and HEAD*/
-void generate_Allow_header(Answer_list **answer);
-/** @brief Generate the content length header.*/
-void generate_content_length_header(Answer_list **answer, FileData *file);
-/**
- * @brief Generate the content type header.
- * @see get_content_type()
- * */
-void generate_content_type_header(Answer_list **answer, FileData *file);
-/** @brief Generate the server header.*/
-void generate_server_header(Answer_list **purge_answer);
-/** @brief Generate the Keep Alive header.*/
-void generate_keep_alive_header(Answer_list **answer);
-/** @brief Generate the connection header header.*/
-void generate_connection_header(Answer_list **answer);
-
-void get_current_website();
-
-void is_acceptable(FileData *file);
-
-/* Definition */
 
  /** The config file */
 Config_server *config = NULL;
@@ -163,7 +17,7 @@ char *process_request(Config_server *_config, int *anwser_len){
 	is_php = 0;
 
 	if ( getRootTree() == NULL){ //If syntax or semantic is not valid
-		answer = process_errors(C_400);
+		answer = process_errors(PRO_C_400);
 	}
 	else{ //If syntax and semantic is valid
 		get_http_version();
@@ -173,18 +27,18 @@ char *process_request(Config_server *_config, int *anwser_len){
 
 		if ( strncmp( getElementValue(method->node, NULL), "GET",3) == 0)
 		{
-			answer = process_method( C_GET );
+			answer = process_method( PRO_GET );
 		}
 		else if ( strncmp( getElementValue(method->node, NULL), "HEAD" ,4)  == 0)
 		{
-			answer = process_method( C_HEAD );
+			answer = process_method( PRO_HEAD );
 		}
 		else if (strncmp( getElementValue(method->node, NULL), "POST" ,4)  == 0)
 		{
-			answer = process_method( C_POST);
+			answer = process_method( PRO_POST);
 		}
 		else { //Not implemented method
-			answer = process_errors(C_501);
+			answer = process_errors(PRO_C_501);
 		}
 		purgeElement(&method);
 	}
@@ -196,6 +50,31 @@ char *process_request(Config_server *_config, int *anwser_len){
 	purge_answer(&answer);
 
 	return answer_text;
+}
+
+Answer_list *process_method(int method){
+	Answer_list *answer = NULL;
+	FileData *file = get_file_data( method == PRO_POST );
+
+	if( file->status == 404) get_404_page(file);
+
+	//printf("%s\n",file->name);
+	//printf("%s\n",file->data);
+
+	generate_status(&answer, file);
+
+	generate_header_fields(&answer, file);
+
+	if ( method == PRO_GET || method == PRO_POST ) generate_body(&answer, file);
+	else generate_body(&answer, NULL);
+
+	if ( file != NULL){
+		
+		if ( file->name != NULL) free(file->name);
+		free(file);
+	}
+
+	return answer;
 }
 
 Answer_list *process_errors(char *error_code){
@@ -215,52 +94,54 @@ Answer_list *process_errors(char *error_code){
 	return answer;
 }
 
-Answer_list *process_method(int method){
-	Answer_list *answer = NULL;
-	FileData *file = get_file_data( method == C_POST );
+void copy_to_answer(char *_value, int len , Answer_list **answer){
+	if( len == -1 ) len = strlen(_value);
+	char *value = malloc(len + 1);
 
-	if( file->status == 404) get_404_page(file);
+	memset(value, '\0', len + 1); //We fill all with 0
 
-	//printf("%s\n",file->name);
-	//printf("%s\n",file->data);
-
-	generate_status(&answer, file);
-
-	generate_header_fields(&answer, file);
-
-	if ( method == C_GET || method == C_POST ) generate_body(&answer, file);
-	else generate_body(&answer, NULL);
-
-	if ( file != NULL){
-		
-		if ( file->name != NULL) free(file->name);
-		free(file);
+	if(value){
+		memcpy(value, _value, len ); //Copy the _value
+		add_node_answer( answer, A_TAG_HEADER, value, len, A_CANFREE);
 	}
-
-	return answer;
 }
 
-void get_404_page(FileData *file){
+/*
+Getting Information
+*/
 
-	file->type = malloc(26);
-	memset(file->type, '\0', file->len + 1);
-	memcpy(file->type,"text/html; charset=utf-8", 25);
+FileData * push_file_data(char *name){
+	FileData *file = malloc(sizeof(FileData));
+	file->name = name;
+	file->data = NULL;
+	file->status = 404;
+	file->len = 0;
 
-	if( c_site->page_404 == NULL){
-		char *name = get_file_name(NULL);
-		file->len = 242 + strlen(name);
-		file->data = malloc( file->len + 1);
-		memset(file->data, '\0', file->len + 1);
-		sprintf(file->data, "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n<title>404 Not Found</title>\n</head><body>\n<h1>Not Found</h1>\n<p>The requested URL %s was not found on this server.</p>\n<hr>\n<address>Server HTTP Groupe 9</address>\n</body></html>",name);
-		free(name);
+	if( is_php ){
+		//On free le nom ce qui permet de déterminer si c'est du php ou non
+		if( file->name != NULL ) free(file->name);
+		file->name = NULL;
+		file->data = fastcgi_get_body(&file->len);
+		file->status = 200;
+		return file;
 	}
-	else{
-		int len = strlen(c_site->page_404);
-		char *temp = malloc(len + 2);
-		memset(temp, '\0', len + 2);
-		*temp = '/';
-		strcat(temp, c_site->page_404);
+
+	_Token *method = searchTree( NULL , "message-body");
+
+	if( method != NULL){
+		file->data = getElementValue(method->node, NULL);
+		file->len = strlen(getElementValue(method->node, NULL));
+		purgeElement(&method);
 	}
+
+	if(file->name == NULL || file->data == NULL) return file;
+
+	int result = write_file( file->name,file->data, file->len);
+
+	if( result == 0) file->status = 200;
+	else if( result == 2) file->status = 201;
+
+	return file;
 }
 
 FileData *get_file_data(int isPost){
@@ -300,76 +181,6 @@ FileData *get_file_data(int isPost){
 	else file->type = get_content_type(file->name);
 
 	is_acceptable(file);
-
-	return file;
-}
-
-void is_acceptable(FileData *file){
-	char *accept = get_header_val("Accept");
-
-	char *semilicon = strchr(file->type, ';');
-	int slen = (int)(semilicon - file->type); // len from the start to ;
-
-	char *mime_subtype = malloc( slen + 1); // len + \0
-	memset(mime_subtype,'\0', slen + 1);
-	memcpy(mime_subtype, file->type, slen);
-
-	char *slash = strchr(file->type, '/');
-	int mlen = (int)(slash - file->type) + 1; // len from the start to /
-
-	char *mime_type = malloc( mlen + 2); // len + *\0
-	memset(mime_type,'\0', mlen + 2);
-	memcpy(mime_type, file->type, mlen);
-	strcat(mime_type,"*");
-
-	//printf("Type : %s - %s\n",mime_type,mime_subtype);
-
-	if( strstr(accept, C_ACCEPT_ALL) == NULL)
-	{	
-		if( strstr(accept, mime_subtype) == NULL )
-		{
-			if( strstr(accept, file->type) == NULL )
-			{
-				file->status = 406;
-			}
-		}
-	}
-	
-	free(mime_subtype);
-	free(mime_type);
-	free(accept);
-}
-
-FileData * push_file_data(char *name){
-	FileData *file = malloc(sizeof(FileData));
-	file->name = name;
-	file->data = NULL;
-	file->status = 404;
-	file->len = 0;
-
-	if( is_php ){
-		//On free le nom ce qui permet de déterminer si c'est du php ou non
-		if( file->name != NULL ) free(file->name);
-		file->name = NULL;
-		file->data = fastcgi_get_body(&file->len);
-		file->status = 200;
-		return file;
-	}
-
-	_Token *method = searchTree( NULL , "message-body");
-
-	if( method != NULL){
-		file->data = getElementValue(method->node, NULL);
-		file->len = strlen(getElementValue(method->node, NULL));
-		purgeElement(&method);
-	}
-
-	if(file->name == NULL || file->data == NULL) return file;
-
-	int result = write_file( file->name,file->data, file->len);
-
-	if( result == 0) file->status = 200;
-	else if( result == 2) file->status = 201;
 
 	return file;
 }
@@ -433,23 +244,30 @@ char *get_file_name(char *_name){
 	return name;
 }
 
-int get_connection_status(){
-	return connection_status;
-}
+void get_404_page(FileData *file){
 
-void copy_to_answer(char *_value, int len , Answer_list **answer){
-	if( len == -1 ) len = strlen(_value);
-	char *value = malloc(len + 1);
+	file->type = malloc(26);
+	memset(file->type, '\0', file->len + 1);
+	memcpy(file->type,"text/html; charset=utf-8", 25);
 
-	memset(value, '\0', len + 1); //We fill all with 0
-
-	if(value){
-		memcpy(value, _value, len ); //Copy the _value
-		add_node_answer( answer, A_TAG_HEADER, value, len, A_CANFREE);
+	if( c_site->page_404 == NULL){
+		char *name = get_file_name(NULL);
+		file->len = 242 + strlen(name);
+		file->data = malloc( file->len + 1);
+		memset(file->data, '\0', file->len + 1);
+		sprintf(file->data, "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n<title>404 Not Found</title>\n</head><body>\n<h1>Not Found</h1>\n<p>The requested URL %s was not found on this server.</p>\n<hr>\n<address>Server HTTP Groupe 9</address>\n</body></html>",name);
+		free(name);
+	}
+	else{
+		int len = strlen(c_site->page_404);
+		char *temp = malloc(len + 2);
+		memset(temp, '\0', len + 2);
+		*temp = '/';
+		strcat(temp, c_site->page_404);
 	}
 }
 
-char * get_content_type(char *file_name){
+char *get_content_type(char *file_name){
 	const char *magic_full = NULL;
 	char * charset = NULL;
 	char * res = NULL;
@@ -493,6 +311,46 @@ char * get_content_type(char *file_name){
 	return res;
 }
 
+void is_acceptable(FileData *file){
+	char *accept = get_header_val("Accept");
+
+	char *semilicon = strchr(file->type, ';');
+	int slen = (int)(semilicon - file->type); // len from the start to ;
+
+	char *mime_subtype = malloc( slen + 1); // len + \0
+	memset(mime_subtype,'\0', slen + 1);
+	memcpy(mime_subtype, file->type, slen);
+
+	char *slash = strchr(file->type, '/');
+	int mlen = (int)(slash - file->type) + 1; // len from the start to /
+
+	char *mime_type = malloc( mlen + 2); // len + *\0
+	memset(mime_type,'\0', mlen + 2);
+	memcpy(mime_type, file->type, mlen);
+	strcat(mime_type,"*");
+
+	//printf("Type : %s - %s\n",mime_type,mime_subtype);
+
+	if( strstr(accept, PRO_ACCEPT_ALL) == NULL)
+	{	
+		if( strstr(accept, mime_subtype) == NULL )
+		{
+			if( strstr(accept, file->type) == NULL )
+			{
+				file->status = 406;
+			}
+		}
+	}
+	
+	free(mime_subtype);
+	free(mime_type);
+	free(accept);
+}
+
+int get_connection_status(){
+	return connection_status;
+}
+
 void get_http_version(){
 	_Token *version = searchTree(NULL, "HTTP-version");
 	int version_len = 0;
@@ -516,6 +374,7 @@ void get_current_website(){
 	}
 }
 
+
 /*
 Generation of response
 */
@@ -526,16 +385,16 @@ void generate_status(Answer_list **answer, FileData *file){
 	switch (status)
 	{
 	case 200:
-		add_node_answer( answer, A_TAG_STATUS, C_200, strlen(C_200), !A_CANFREE);
+		add_node_answer( answer, A_TAG_STATUS, PRO_C_200, strlen(PRO_C_200), !A_CANFREE);
 	break;
 	case 404:
-		add_node_answer( answer, A_TAG_STATUS, C_404, strlen(C_404), !A_CANFREE);
+		add_node_answer( answer, A_TAG_STATUS, PRO_C_404, strlen(PRO_C_404), !A_CANFREE);
 		break;
 	case 201:
-		add_node_answer( answer, A_TAG_STATUS, C_201 , strlen(C_201), !A_CANFREE);
+		add_node_answer( answer, A_TAG_STATUS, PRO_C_201 , strlen(PRO_C_201), !A_CANFREE);
 		break;
 	case 406:
-		add_node_answer( answer, A_TAG_STATUS, C_406 , strlen(C_406), !A_CANFREE);
+		add_node_answer( answer, A_TAG_STATUS, PRO_C_406 , strlen(PRO_C_406), !A_CANFREE);
 		break;
 	default:
 		char s[50] = "";
@@ -594,7 +453,14 @@ void generate_content_length_header(Answer_list **answer, FileData *file){
 }
 
 void generate_content_type_header(Answer_list **answer, FileData *file){
-	char *type =file->type;
+	char *type = file->type;
+
+	if( type ) {
+		type = malloc(11);
+		memset(type,'\0',11);
+		memcpy(type,"text/html",10);
+	}
+
 	char value[80] = "";
 
 	sprintf(value, "Content-Type: %s", type);

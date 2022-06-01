@@ -62,7 +62,7 @@
 	int compare_string(char *chaine1, char *chaine2);
 
 	/**
-	 * @brief Return the value of str without percent encoding
+	 * @brief Return the value of str without percent encoding and apply the dot dot removal.
 	 * +   -> ' '
 	 * %20 -> ' '
 	 * %2B -> '+'
