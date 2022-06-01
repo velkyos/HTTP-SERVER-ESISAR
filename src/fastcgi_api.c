@@ -413,7 +413,7 @@ char *fastcgi_concat_stdout(Fastcgi_stdout_linked *list, int * len){
 
 	while ( temp != NULL)
 	{		
-		if( temp->header->type == FCGI_STDERR) printf("\n ATTENTION ! \n %s \n", temp->header->contentData);
+		if( temp->header->type == FCGI_STDERR) printf("\n WARNING ! \n %s \n", temp->header->contentData);
 
 		if( temp->header->type == FCGI_STDOUT) size += ntohs( temp->header->contentLength);
 			
@@ -506,6 +506,10 @@ void add_params_script(FCGI_Header *h, char *file_name, int port){
 	memset(test, '\0', len);
 
 	sprintf(test, "proxy:fcgi://127.0.0.1:%d/%s", port, file_name);
+
+	if ( strlen(test) > 127){
+		printf(" --> WARNING : file path too big, place the file in another folder closer to the root !\n");
+	}
 
 	addNameValuePair(h,"SCRIPT_FILENAME", test);
 	free(test);
