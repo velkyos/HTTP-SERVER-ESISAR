@@ -103,4 +103,6 @@
 	 */
 	void add_token_to_list(_Token *list, derivation_tree *node);
 
+	char *get_header_val(char *name);
+	
 #endif

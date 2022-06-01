@@ -117,3 +117,20 @@ void add_token_to_list(_Token *list, derivation_tree *node){
 
 	list->next = new;
 }
+
+char *get_header_val(char *name){
+	_Token *val = searchTree(NULL , name);
+
+	if( val){
+		int len;
+		getElementValue(val->node, &len);
+
+		char *temp = malloc( len + 1);
+		memset(temp, '\0', len + 1);
+		memcpy(temp, getElementValue(val->node, NULL), len);
+
+		free(val);
+		return temp;
+	}
+	return NULL;
+}

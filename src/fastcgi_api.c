@@ -64,7 +64,7 @@ void purge_stdout_list(Fastcgi_stdout_linked **list);
 FCGI_Header *get_stdout_list(Fastcgi_stdout_linked *list, int i);
 
 void try_add_params(FCGI_Header *h, char *name, char *value);
-char *get_header_val(char *name);
+
 
 /* Definition */
 
@@ -523,21 +523,4 @@ void try_add_params(FCGI_Header *h, char *name, char *value){
 		free(val);
 	}
 	
-}
-
-char *get_header_val(char *name){
-	_Token *val = searchTree(NULL , name);
-
-	if( val){
-		int len;
-		getElementValue(val->node, &len);
-
-		char *temp = malloc( len + 1);
-		memset(temp, '\0', len + 1);
-		memcpy(temp, getElementValue(val->node, NULL), len);
-
-		free(val);
-		return temp;
-	}
-	return NULL;
 }

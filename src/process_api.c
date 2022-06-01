@@ -27,10 +27,12 @@
 #define C_201 "HTTP/1.1 201 Created"
 #define C_400 "HTTP/1.1 400 Bad Request"
 #define C_404 "HTTP/1.1 404 Not Found"
+#define C_406 "HTTP/1.1 406 Not Acceptable"
 #define C_501 "HTTP/1.1 501 Not Implemented"
 #define C_GET 1
 #define C_POST 2
 #define C_HEAD 3
+#define C_ACCEPT_ALL "*/*"
 
 /* Declaration */
 
@@ -41,6 +43,7 @@
 typedef struct str_fileData{
 	char *name;
 	char *data;
+	char *type;
 	int len;
 	int status;
 } FileData;
@@ -137,6 +140,8 @@ void generate_connection_header(Answer_list **answer);
 
 void get_current_website();
 
+void is_acceptable(FileData *file);
+
 /* Definition */
 
  /** The config file */
@@ -167,7 +172,6 @@ char *process_request(Config_server *_config, int *anwser_len){
 		if ( strncmp( getElementValue(method->node, NULL), "GET",3) == 0)
 		{
 			answer = process_method( C_GET );
-			
 		}
 		else if ( strncmp( getElementValue(method->node, NULL), "HEAD" ,4)  == 0)
 		{
@@ -176,7 +180,6 @@ char *process_request(Config_server *_config, int *anwser_len){
 		else if (strncmp( getElementValue(method->node, NULL), "POST" ,4)  == 0)
 		{
 			answer = process_method( C_POST);
-			//fastcgi_request("test.php",10,9000, 1);
 		}
 		else { //Not implemented method
 			answer = process_errors(C_501);
@@ -263,7 +266,50 @@ FileData *get_file_data(int isPost){
 	if(file->data == NULL) return file;
 
 	file->status = 200;
+
+	
+	if( is_php ) file->type = fastcgi_get_type();
+	else file->type = get_content_type(file->name);
+
+	is_acceptable(file);
+
 	return file;
+}
+
+void is_acceptable(FileData *file){
+	char *accept = get_header_val("Accept");
+
+	char *semilicon = strchr(file->type, ';');
+	int slen = (int)(semilicon - file->type); // len from the start to ;
+
+	char *mime_subtype = malloc( slen + 1); // len + \0
+	memset(mime_subtype,'\0', slen + 1);
+	memcpy(mime_subtype, file->type, slen);
+
+	char *slash = strchr(file->type, '/');
+	int mlen = (int)(slash - file->type) + 1; // len from the start to /
+
+	char *mime_type = malloc( mlen + 2); // len + *\0
+	memset(mime_type,'\0', mlen + 2);
+	memcpy(mime_type, file->type, mlen);
+	strcat(mime_type,"*");
+
+	//printf("Type : %s - %s\n",mime_type,mime_subtype);
+
+	if( strstr(accept, C_ACCEPT_ALL) == NULL)
+	{	
+		if( strstr(accept, mime_subtype) == NULL )
+		{
+			if( strstr(accept, file->type) == NULL )
+			{
+				file->status = 406;
+			}
+		}
+	}
+	
+	free(mime_subtype);
+	free(mime_type);
+	free(accept);
 }
 
 FileData * push_file_data(char *name){
@@ -453,6 +499,9 @@ void generate_status(Answer_list **answer, FileData *file){
 	case 201:
 		add_node_answer( answer, A_TAG_STATUS, C_201 , strlen(C_201), !A_CANFREE);
 		break;
+	case 406:
+		add_node_answer( answer, A_TAG_STATUS, C_406 , strlen(C_406), !A_CANFREE);
+		break;
 	default:
 		char s[50] = "";
 		sprintf(s, "HTTP/1.1 %d", status);
@@ -497,7 +546,7 @@ void generate_date_header(Answer_list **answer){
 }
 
 void generate_Allow_header(Answer_list **answer){
-	add_node_answer( answer, A_TAG_HEADER, "Allow: GET, HEAD, POST", 16, !A_CANFREE);
+	add_node_answer( answer, A_TAG_HEADER, "Allow: GET, HEAD, POST", 23, !A_CANFREE);
 }
 
 void generate_content_length_header(Answer_list **answer, FileData *file){
@@ -510,11 +559,9 @@ void generate_content_length_header(Answer_list **answer, FileData *file){
 }
 
 void generate_content_type_header(Answer_list **answer, FileData *file){
-	char *type = NULL;
+	char *type =file->type;
 	char value[80] = "";
 
-	if( is_php ) type = fastcgi_get_type();
-	else type = get_content_type(file->name);
 
 	sprintf(value, "Content-Type: %s", type);
 	free(type);
