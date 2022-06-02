@@ -1,0 +1,391 @@
+Scanning the config file ...	finished !
+Server is Listening on 8080 ..
+-> Request received from client 9
+Client [9] [127.0.0.1:40964]
+Request content :
+GET /contact.html HTTP/1.1
+Host: prenium.localhost:8080
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:101.0) Gecko/20100101 Firefox/101.0
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate, br
+DNT: 1
+Connection: keep-alive
+Referer: http://prenium.localhost:8080/index.html
+Upgrade-Insecure-Requests: 1
+Sec-Fetch-Dest: document
+Sec-Fetch-Mode: navigate
+Sec-Fetch-Site: same-origin
+Sec-Fetch-User: ?1
+
+
+
+Server is Listening on 8080 ..
+-> Request received from client 9
+Client [9] [127.0.0.1:40964]
+Request content :
+GET /plugins/bootstrap/bootstrap.min.css HTTP/1.1
+Host: prenium.localhost:8080
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:101.0) Gecko/20100101 Firefox/101.0
+Accept: text/css,*/*;q=0.1
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate, br
+DNT: 1
+Connection: keep-alive
+Referer: http://prenium.localhost:8080/contact.html
+Sec-Fetch-Dest: style
+Sec-Fetch-Mode: no-cors
+Sec-Fetch-Site: same-origin
+
+
+
+Server is Listening on 8080 ..
+-> Request received from client 8
+Client [8] [127.0.0.1:40966]
+Request content :
+GET /plugins/Ionicons/css/ionicons.min.css HTTP/1.1
+Host: prenium.localhost:8080
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:101.0) Gecko/20100101 Firefox/101.0
+Accept: text/css,*/*;q=0.1
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate, br
+DNT: 1
+Connection: keep-alive
+Referer: http://prenium.localhost:8080/contact.html
+Sec-Fetch-Dest: style
+Sec-Fetch-Mode: no-cors
+Sec-Fetch-Site: same-origin
+
+
+
+Server is Listening on 8080 ..
+-> Request received from client 7
+Client [7] [127.0.0.1:40968]
+Request content :
+GET /plugins/animate-css/animate.css HTTP/1.1
+Host: prenium.localhost:8080
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:101.0) Gecko/20100101 Firefox/101.0
+Accept: text/css,*/*;q=0.1
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate, br
+DNT: 1
+Connection: keep-alive
+Referer: http://prenium.localhost:8080/contact.html
+Sec-Fetch-Dest: style
+Sec-Fetch-Mode: no-cors
+Sec-Fetch-Site: same-origin
+
+
+
+Server is Listening on 8080 ..
+-> Request received from client 6
+Client [6] [127.0.0.1:40970]
+Request content :
+GET /plugins/magnific-popup/magnific-popup.css HTTP/1.1
+Host: prenium.localhost:8080
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:101.0) Gecko/20100101 Firefox/101.0
+Accept: text/css,*/*;q=0.1
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate, br
+DNT: 1
+Connection: keep-alive
+Referer: http://prenium.localhost:8080/contact.html
+Sec-Fetch-Dest: style
+Sec-Fetch-Mode: no-cors
+Sec-Fetch-Site: same-origin
+
+
+
+Server is Listening on 8080 ..
+-> Request received from client 5
+Client [5] [127.0.0.1:40972]
+Request content :
+GET /plugins/slick/slick.css HTTP/1.1
+Host: prenium.localhost:8080
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:101.0) Gecko/20100101 Firefox/101.0
+Accept: text/css,*/*;q=0.1
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate, br
+DNT: 1
+Connection: keep-alive
+Referer: http://prenium.localhost:8080/contact.html
+Sec-Fetch-Dest: style
+Sec-Fetch-Mode: no-cors
+Sec-Fetch-Site: same-origin
+
+
+
+Server is Listening on 8080 ..
+-> Request received from client 4
+Client [4] [127.0.0.1:40974]
+Request content :
+GET /css/style.css HTTP/1.1
+Host: prenium.localhost:8080
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:101.0) Gecko/20100101 Firefox/101.0
+Accept: text/css,*/*;q=0.1
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate, br
+DNT: 1
+Connection: keep-alive
+Referer: http://prenium.localhost:8080/contact.html
+Sec-Fetch-Dest: style
+Sec-Fetch-Mode: no-cors
+Sec-Fetch-Site: same-origin
+
+
+
+Server is Listening on 8080 ..
+-> Request received from client 5
+Client [5] [127.0.0.1:40972]
+Request content :
+GET /plugins/shuffle/shuffle.min.js HTTP/1.1
+Host: prenium.localhost:8080
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:101.0) Gecko/20100101 Firefox/101.0
+Accept: */*
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate, br
+DNT: 1
+Connection: keep-alive
+Referer: http://prenium.localhost:8080/contact.html
+Sec-Fetch-Dest: script
+Sec-Fetch-Mode: no-cors
+Sec-Fetch-Site: same-origin
+
+
+
+Server is Listening on 8080 ..
+-> Request received from client 4
+Client [4] [127.0.0.1:40974]
+Request content :
+GET /plugins/SyoTimer/jquery.syotimer.min.js HTTP/1.1
+Host: prenium.localhost:8080
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:101.0) Gecko/20100101 Firefox/101.0
+Accept: */*
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate, br
+DNT: 1
+Connection: keep-alive
+Referer: http://prenium.localhost:8080/contact.html
+Sec-Fetch-Dest: script
+Sec-Fetch-Mode: no-cors
+Sec-Fetch-Site: same-origin
+
+
+
+Server is Listening on 8080 ..
+-> Request received from client 5
+Client [5] [127.0.0.1:40972]
+Request content :
+GET /plugins/google-map/map.js HTTP/1.1
+Host: prenium.localhost:8080
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:101.0) Gecko/20100101 Firefox/101.0
+Accept: */*
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate, br
+DNT: 1
+Connection: keep-alive
+Referer: http://prenium.localhost:8080/contact.html
+Sec-Fetch-Dest: script
+Sec-Fetch-Mode: no-cors
+Sec-Fetch-Site: same-origin
+
+
+
+Server is Listening on 8080 ..
+-> Request received from client 4
+Client [4] [127.0.0.1:40974]
+Request content :
+GET /js/script.js HTTP/1.1
+Host: prenium.localhost:8080
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:101.0) Gecko/20100101 Firefox/101.0
+Accept: */*
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate, br
+DNT: 1
+Connection: keep-alive
+Referer: http://prenium.localhost:8080/contact.html
+Sec-Fetch-Dest: script
+Sec-Fetch-Mode: no-cors
+Sec-Fetch-Site: same-origin
+
+
+
+Server is Listening on 8080 ..
+-> Request received from client 5
+Client [5] [127.0.0.1:40972]
+Request content :
+GET /plugins/Ionicons/fonts/ionicons.ttf?v=2.0.0 HTTP/1.1
+Host: prenium.localhost:8080
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:101.0) Gecko/20100101 Firefox/101.0
+Accept: application/font-woff2;q=1.0,application/font-woff;q=0.9,*/*;q=0.8
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate, br
+DNT: 1
+Connection: keep-alive
+Referer: http://prenium.localhost:8080/plugins/Ionicons/css/ionicons.min.css
+Sec-Fetch-Dest: font
+Sec-Fetch-Mode: cors
+Sec-Fetch-Site: same-origin
+
+
+
+Server is Listening on 8080 ..
+-> Request received from client 4
+Client [4] [127.0.0.1:40974]
+Request content :
+GET /images/logo.png HTTP/1.1
+Host: prenium.localhost:8080
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:101.0) Gecko/20100101 Firefox/101.0
+Accept: image/avif,image/webp,*/*
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate, br
+DNT: 1
+Connection: keep-alive
+Referer: http://prenium.localhost:8080/contact.html
+Sec-Fetch-Dest: image
+Sec-Fetch-Mode: no-cors
+Sec-Fetch-Site: same-origin
+
+
+
+Server is Listening on 8080 ..
+-> Request received from client 5
+Client [5] [127.0.0.1:40972]
+Request content :
+GET /images/featue-bg.jpg HTTP/1.1
+Host: prenium.localhost:8080
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:101.0) Gecko/20100101 Firefox/101.0
+Accept: image/avif,image/webp,*/*
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate, br
+DNT: 1
+Connection: keep-alive
+Referer: http://prenium.localhost:8080/css/style.css
+Sec-Fetch-Dest: image
+Sec-Fetch-Mode: no-cors
+Sec-Fetch-Site: same-origin
+
+
+
+Server is Listening on 8080 ..
+-> Request received from client 6
+Client [6] [127.0.0.1:40970]
+Request content :
+GET /plugins/magnific-popup/jquery.magnific-popup.min.js HTTP/1.1
+Host: prenium.localhost:8080
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:101.0) Gecko/20100101 Firefox/101.0
+Accept: */*
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate, br
+DNT: 1
+Connection: keep-alive
+Referer: http://prenium.localhost:8080/contact.html
+Sec-Fetch-Dest: script
+Sec-Fetch-Mode: no-cors
+Sec-Fetch-Site: same-origin
+
+
+
+Server is Listening on 8080 ..
+-> Request received from client 7
+Client [7] [127.0.0.1:40968]
+Request content :
+GET /plugins/slick/slick.min.js HTTP/1.1
+Host: prenium.localhost:8080
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:101.0) Gecko/20100101 Firefox/101.0
+Accept: */*
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate, br
+DNT: 1
+Connection: keep-alive
+Referer: http://prenium.localhost:8080/contact.html
+Sec-Fetch-Dest: script
+Sec-Fetch-Mode: no-cors
+Sec-Fetch-Site: same-origin
+
+
+
+Server is Listening on 8080 ..
+-> Request received from client 8
+Client [8] [127.0.0.1:40966]
+Request content :
+GET /plugins/bootstrap/bootstrap.min.js HTTP/1.1
+Host: prenium.localhost:8080
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:101.0) Gecko/20100101 Firefox/101.0
+Accept: */*
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate, br
+DNT: 1
+Connection: keep-alive
+Referer: http://prenium.localhost:8080/contact.html
+Sec-Fetch-Dest: script
+Sec-Fetch-Mode: no-cors
+Sec-Fetch-Site: same-origin
+
+
+
+Server is Listening on 8080 ..
+-> Request received from client 9
+Client [9] [127.0.0.1:40964]
+Request content :
+GET /plugins/jQuery/jquery.min.js HTTP/1.1
+Host: prenium.localhost:8080
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:101.0) Gecko/20100101 Firefox/101.0
+Accept: */*
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate, br
+DNT: 1
+Connection: keep-alive
+Referer: http://prenium.localhost:8080/contact.html
+Sec-Fetch-Dest: script
+Sec-Fetch-Mode: no-cors
+Sec-Fetch-Site: same-origin
+
+
+
+Server is Listening on 8080 ..
+-> Request received from client 5
+Client [5] [127.0.0.1:40972]
+Request content :
+GET /images/marker.png HTTP/1.1
+Host: prenium.localhost:8080
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:101.0) Gecko/20100101 Firefox/101.0
+Accept: image/avif,image/webp,*/*
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate, br
+DNT: 1
+Connection: keep-alive
+Referer: http://prenium.localhost:8080/contact.html
+Sec-Fetch-Dest: image
+Sec-Fetch-Mode: no-cors
+Sec-Fetch-Site: same-origin
+
+
+
+Server is Listening on 8080 ..
+-> Request received from client 5
+Client [5] [127.0.0.1:40972]
+Request content :
+POST /sendmail.php HTTP/1.1
+Host: prenium.localhost:8080
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:101.0) Gecko/20100101 Firefox/101.0
+Accept: */*
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate, br
+Content-Type: application/x-www-form-urlencoded; charset=UTF-8
+X-Requested-With: XMLHttpRequest
+Content-Length: 456
+Origin: http://prenium.localhost:8080
+DNT: 1
+Connection: keep-alive
+Referer: http://prenium.localhost:8080/contact.html
+Sec-Fetch-Dest: empty
+Sec-Fetch-Mode: cors
+Sec-Fetch-Site: same-origin
+
+user_name=qsd&user_email=qSDQSD%40qsd.com&user_subject=qsd&user_message=qds&0=u&1=s&2=e&3=r&4=_&5=n&6=a&7=m&8=e&9=%3D&10=q&11=s&12=d&13=%26&14=u&15=s&16=e&17=r&18=_&19=e&20=m&21=a&22=i&23=l&24=%3D&25=q&26=S&27=D&28=Q&29=S&30=D&31=%25&32=4&33=0&34=q&35=s&36=d&37=.&38=c&39=o&40=m&41=%26&42=u&43=s&44=e&45=r&46=_&47=s&48=u&49=b&50=j&51=e&52=c&53=t&54=%3D&55=q&56=s&57=d&58=%26&59=u&60=s&61=e&62=r&63=_&64=m&65=e&66=s&67=s&68=a&69=g&70=e&71=%3D&72=q&73=d&74=s
+
+Taille type :40
+Taille type :8
+->>>>>TEST
+Server is closing ..

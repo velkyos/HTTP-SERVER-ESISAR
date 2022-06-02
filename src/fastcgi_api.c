@@ -1,91 +1,15 @@
-/**
- * @file fastcgi_api.c
- * @author ROBERT Benjamin & PEDER Leo & MANDON Anaël
- * @brief Interface between HTTP and FASTCGI
- * @version 0.1
- * @date 2022-05-30
- */
-/* System Includes */
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <time.h>
-#include <errno.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-
-/* User Includes */
-
-#include "fastcgi.h" 
 #include "fastcgi_api.h" 
-#include "syntax_api.h"
-#include "process_api.h"
-#include "utils.h"
-
-/* Constants */
-
-#define fastcgi_stdin(fd,id,data,len) fastcgi_send(fd,FCGI_STDIN,id,data,len)
-#define fastcgi_data(fd,id,data,len) fastcgi_send(fd,FCGI_DATA,id,data,len)
-
-/* Declaration */
-
-typedef struct st_fastcgi_stdout_link
-{
-	FCGI_Header *header;
-	struct st_fastcgi_stdout_link *next;
-}Fastcgi_stdout_linked;
-
-int open_socket(int port);
-void sendData_socket(int fd, FCGI_Header *header, int len);
-
-int addNameValuePair(FCGI_Header *h,char *name,char *value);
-void writeLen(int len, char **p);
-
-void fastcgi_send(int fd, unsigned char type, unsigned short request_id, char *data, unsigned int len);
-void fastcgi_begin_request(int fd,unsigned short request_id,unsigned short role,unsigned char flags);
-void fastcgi_abort_request(int fd,unsigned short request_id);
-
-void fastcgi_params(int fd, unsigned short request_id,char *file_name, int port, int isPost);
-void add_params_script(FCGI_Header *h, char *file_name, int port);
-void add_params_query(FCGI_Header *h);
-void add_params_name(FCGI_Header *h);
-
-void fastcgi_answer(int fd, unsigned short request_id );
-FCGI_Header *readData_socket(int fd);
-char *fastcgi_concat_stdout(Fastcgi_stdout_linked *list, int * len);
-void handle_fastcgi_data(char * _data, int _len);
-
-void add_stdout_list(Fastcgi_stdout_linked **list, FCGI_Header *header);
-void purge_stdout_list(Fastcgi_stdout_linked **list);
-FCGI_Header *get_stdout_list(Fastcgi_stdout_linked *list, int i);
-
-void try_add_params(FCGI_Header *h, char *name, char *value);
-
 
 /* Definition */
 
+/* Status code return by fastcgi*/
 int fastcgi_error;
 char *fastcgi_data = NULL;
 char *fastcgi_type = NULL;
 int fastcgi_length = 0;
+
+/* Current website */
 Website *site = NULL;
-
-char * fastcgi_get_body(int *len){
-	if (len) *len = fastcgi_length;
-	return fastcgi_data;
-}
-
-char * fastcgi_get_type(){
-	return fastcgi_type;
-}
-
-int fastcgi_get_error(){
-	return fastcgi_error;
-}
 
 void fastcgi_request(char *file_name, int request_id, int port, Website *_site, int isPost){
 	site = _site;
@@ -188,72 +112,6 @@ void fastcgi_abort_request(int fd,unsigned short request_id){
 	h.paddingLength=0; 
 	h.reserved = 0;
 	sendData_socket(fd,&h,FCGI_HEADER_SIZE+(h.contentLength)+(h.paddingLength)); 
-}
-
-void fastcgi_params(int fd, unsigned short request_id, char *file_name, int port, int isPost){
-	FCGI_Header h;
-
-	h.version = FCGI_VERSION_1;
-	h.type = FCGI_PARAMS;
-	h.requestId = htons(request_id);
-	h.paddingLength = 0;
-	h.contentLength = 0;
-	h.reserved = 0;
-	
-	//?HOST
-	try_add_params(&h, "HTTP_HOST", "Host");
-	//?USER_AGENT
-	try_add_params(&h, "HTTP_USER_AGENT", "User-Agent");
-	//?ACCEPT
-	try_add_params(&h, "HTTP_ACCEPT", "Accept");
-	//?ACCEPT_LANGUAGE
-	try_add_params(&h, "HTTP_ACCEPT_LANGUAGE", "Accept-Language");
-	//?ACCEPT_ENCODING
-	try_add_params(&h, "HTTP_ACCEPT_ENCODING", "Accept-Encoding");
-	//?CONNECTION
-	try_add_params(&h, "HTTP_CONNECTION", "Connection");
-
-	if( isPost ){
-		//>CONTENT_TYPE
-		try_add_params(&h, "CONTENT_TYPE", "Content-Type");
-		//>CONTENT_LENGTH
-		try_add_params(&h, "CONTENT_LENGTH", "Content-Length");
-		//>REFERER
-		try_add_params(&h, "HTTP-REFERERdqsd", "Referer");
-	}
-	
-	//ADDRESS
-	//PORT
-	//REMOTEPORT
-
-
-	//DOCUMENT_ROOT
-	addNameValuePair(&h,"DOCUMENT_ROOT", site->root);
-	//SCRIPTFILENAME
-	add_params_script(&h, file_name, port);
-	//URI
-	try_add_params(&h, "REQUEST_URI", "request-target");
-	//SCRIPTNAME
-	char *temp = get_file_name(NULL);
-	addNameValuePair(&h, "SCRIPT_NAME", temp);
-	free(temp);
-
-	//INTERFACE
-	addNameValuePair(&h, "GATEWAY_INTERFACE","CGI/1.1");
-	//PROTOCAOLE ?maybe faire gaffe au 1.0
-	addNameValuePair(&h, "SERVER_PROTOCOL","HTTP/1.1");
-
-	//METHODE
-	if( isPost) addNameValuePair(&h,"REQUEST_METHOD","POST");
-	else addNameValuePair(&h,"REQUEST_METHOD","GET");
-	//QUERY
-	add_params_query(&h);
-	//REQUEST_SCHEME
-	addNameValuePair(&h, "REQUEST_SCHEME","http");
-
-	sendData_socket(fd,&h,FCGI_HEADER_SIZE+(h.contentLength)+(h.paddingLength));  
-	fastcgi_send(fd, FCGI_PARAMS, request_id, NULL, 0);
-
 }
 
 void fastcgi_send(int fd, unsigned char type, unsigned short request_id, char *data, unsigned int len) {
@@ -394,7 +252,7 @@ void handle_fastcgi_data(char * _data, int _len){
 	if( type == 0 || data == 0) return;
 
 	len = (int)(data - type);
-
+	printf("Taille type :%d\n",len);
 	fastcgi_type = malloc( len + 1);
 	memset( fastcgi_type, '\0', len + 1);
 	memcpy( fastcgi_type, type, len );
@@ -402,6 +260,7 @@ void handle_fastcgi_data(char * _data, int _len){
 	len = _len - (int)(data - _data);
 
 	fastcgi_length = len;
+	printf("Taille type :%d\n",len);
 	fastcgi_data = malloc( len + 1);
 	memset( fastcgi_data, '\0', len + 1);
 	memcpy( fastcgi_data, data, len );
@@ -485,6 +344,72 @@ FCGI_Header *get_stdout_list(Fastcgi_stdout_linked *list, int i){
 
 /* PARAMS */
 
+void fastcgi_params(int fd, unsigned short request_id, char *file_name, int port, int isPost){
+	FCGI_Header h;
+
+	h.version = FCGI_VERSION_1;
+	h.type = FCGI_PARAMS;
+	h.requestId = htons(request_id);
+	h.paddingLength = 0;
+	h.contentLength = 0;
+	h.reserved = 0;
+	
+	//?HOST
+	try_add_params(&h, "HTTP_HOST", "Host");
+	//?USER_AGENT
+	try_add_params(&h, "HTTP_USER_AGENT", "User-Agent");
+	//?ACCEPT
+	try_add_params(&h, "HTTP_ACCEPT", "Accept");
+	//?ACCEPT_LANGUAGE
+	try_add_params(&h, "HTTP_ACCEPT_LANGUAGE", "Accept-Language");
+	//?ACCEPT_ENCODING
+	try_add_params(&h, "HTTP_ACCEPT_ENCODING", "Accept-Encoding");
+	//?CONNECTION
+	try_add_params(&h, "HTTP_CONNECTION", "Connection");
+
+	if( isPost ){
+		//>CONTENT_TYPE
+		try_add_params(&h, "CONTENT_TYPE", "Content-Type");
+		//>CONTENT_LENGTH
+		try_add_params(&h, "CONTENT_LENGTH", "Content-Length");
+		//>REFERER
+		try_add_params(&h, "HTTP-REFERERdqsd", "Referer");
+	}
+	
+	//ADDRESS
+	//PORT
+	//REMOTEPORT
+
+
+	//DOCUMENT_ROOT
+	addNameValuePair(&h,"DOCUMENT_ROOT", site->root);
+	//SCRIPTFILENAME
+	add_params_script(&h, file_name, port);
+	//URI
+	try_add_params(&h, "REQUEST_URI", "request-target");
+	//SCRIPTNAME
+	char *temp = get_file_name(NULL);
+	addNameValuePair(&h, "SCRIPT_NAME", temp);
+	free(temp);
+
+	//INTERFACE
+	addNameValuePair(&h, "GATEWAY_INTERFACE","CGI/1.1");
+	//PROTOCAOLE ?maybe faire gaffe au 1.0
+	addNameValuePair(&h, "SERVER_PROTOCOL","HTTP/1.1");
+
+	//METHODE
+	if( isPost) addNameValuePair(&h,"REQUEST_METHOD","POST");
+	else addNameValuePair(&h,"REQUEST_METHOD","GET");
+	//QUERY
+	add_params_query(&h);
+	//REQUEST_SCHEME
+	addNameValuePair(&h, "REQUEST_SCHEME","http");
+
+	sendData_socket(fd,&h,FCGI_HEADER_SIZE+(h.contentLength)+(h.paddingLength));  
+	fastcgi_send(fd, FCGI_PARAMS, request_id, NULL, 0);
+
+}
+
 void add_params_query(FCGI_Header *h){
 	_Token *query = searchTree(NULL, "query");
 	if (query){
@@ -524,3 +449,16 @@ void try_add_params(FCGI_Header *h, char *name, char *value){
 	}
 	
 }
+
+ /* GETTER */
+
+char * fastcgi_get_body(int *len){
+	if (len) *len = fastcgi_length;
+	return fastcgi_data;
+}
+
+char * fastcgi_get_type(){
+	return fastcgi_type;
+}
+
+int fastcgi_get_error(){return fastcgi_error;}

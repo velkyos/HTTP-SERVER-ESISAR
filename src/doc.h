@@ -20,6 +20,8 @@
  * - Documentation files ar in `/doc_html`
  * 
  * \section update Versions
+ * \subsection V1 1.0
+ * - A basic HTTP server (1.0 and 1.1) capable of hosting multiple websites + interface with FAST CGI.
  * \subsection V06 0.6
  * - A basic HTTP server (1.0 and 1.1) capable of hosting multiple websites. (GET/HEAD/POST not php)
  * \subsection V05 0.5
@@ -30,10 +32,11 @@
  * - A basic parser capable of handling HTTP requests.
  * 
  * \section warnings Warnings
- *  There is no security, so you can access every file the programm has permission to.
  *  Currently only 4 errors types are handle :
  *	- 200 OK
+ *	- 201 Created
  *	- 404 Not Found
+	- 406 Not Acceptable
  *	- 400 Bad Request
  *	- 501 Not Implemented
  */

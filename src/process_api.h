@@ -5,7 +5,7 @@
 	 * @file process_api.h
 	 * @author ROBERT Benjamin & PEDER Leo & MANDON Anaël
 	 * @brief Process of an HTTP request.
-	 * @version 0.6
+	 * @version 0.8
 	 * @date 2022-04-8
 	 *
 	 *

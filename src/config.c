@@ -68,6 +68,7 @@ void free_config(Config_server *config){
         free(config->websites[i].index);
         free(config->websites[i].name);
         free(config->websites[i].root);
+		if(config->websites[i].page_404) free(config->websites[i].page_404);
     }
     free(config->websites);
     free(config);

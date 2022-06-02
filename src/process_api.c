@@ -61,6 +61,8 @@ Answer_list *process_method(int method){
 	//printf("%s\n",file->name);
 	//printf("%s\n",file->data);
 
+	if( !file ) printf("--> WARNING : File not defined");
+
 	generate_status(&answer, file);
 
 	generate_header_fields(&answer, file);
@@ -69,7 +71,6 @@ Answer_list *process_method(int method){
 	else generate_body(&answer, NULL);
 
 	if ( file != NULL){
-		
 		if ( file->name != NULL) free(file->name);
 		free(file);
 	}
@@ -114,6 +115,7 @@ FileData * push_file_data(char *name){
 	FileData *file = malloc(sizeof(FileData));
 	file->name = name;
 	file->data = NULL;
+	file->type = NULL;
 	file->status = 404;
 	file->len = 0;
 
@@ -122,6 +124,7 @@ FileData * push_file_data(char *name){
 		if( file->name != NULL ) free(file->name);
 		file->name = NULL;
 		file->data = fastcgi_get_body(&file->len);
+		file->type = fastcgi_get_type();
 		file->status = 200;
 		return file;
 	}
@@ -157,6 +160,7 @@ FileData *get_file_data(int isPost){
 	FileData *file = malloc(sizeof(FileData));
 	file->name = name;
 	file->data = NULL;
+	file->type = NULL;
 	file->status = 404;
 	file->len = 0;
 
@@ -264,6 +268,10 @@ void get_404_page(FileData *file){
 		memset(temp, '\0', len + 2);
 		*temp = '/';
 		strcat(temp, c_site->page_404);
+		char *name = get_complete_path(temp);
+		file->data = read_file( name, &file->len);
+		free(temp);
+		free(name);
 	}
 }
 
@@ -455,7 +463,7 @@ void generate_content_length_header(Answer_list **answer, FileData *file){
 void generate_content_type_header(Answer_list **answer, FileData *file){
 	char *type = file->type;
 
-	if( type ) {
+	if( !type ) {
 		type = malloc(11);
 		memset(type,'\0',11);
 		memcpy(type,"text/html",10);
